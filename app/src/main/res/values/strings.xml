@@ -3,4 +3,5 @@
     <string name="host_a_session">Host A Session</string>
     <string name="swipeflix">swipeflix</string>
     <string name="join_by_code">Join By Code</string>
+    <string name="enter_nickname">Enter Nickname</string>
 </resources>
