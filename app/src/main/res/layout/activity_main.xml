@@ -94,7 +94,7 @@
                     tools:ignore="Autofill,TextContrastCheck" />
 
                 <ImageButton
-                    android:id="@+id/imageButton"
+                    android:id="@+id/joinByQRButton"
                     android:layout_width="60dp"
                     android:layout_height="60dp"
                     android:layout_marginStart="5dp"
