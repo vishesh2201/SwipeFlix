@@ -1,18 +1,22 @@
 package com.example.swipeflix
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.text.InputFilter
 import android.text.InputType
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
+
 class MainActivity : AppCompatActivity() {
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -28,6 +32,7 @@ class MainActivity : AppCompatActivity() {
         val joinCodeEditText: EditText = findViewById(R.id.joincode)
         val hostSessionButton: Button = findViewById(R.id.host_session)
         val joinSessionButton: Button = findViewById(R.id.join_session)
+        val joinByQRButton: ImageButton = findViewById(R.id.joinByQRButton)
 
         // Restrict the "Join by Code" EditText to only 6 digits
         joinCodeEditText.inputType = InputType.TYPE_CLASS_NUMBER
@@ -64,5 +69,10 @@ class MainActivity : AppCompatActivity() {
                 startActivity(intent)
             }
         }
+
+        joinByQRButton.setOnClickListener{
+        }
+
+
     }
 }
