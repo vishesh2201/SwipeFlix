@@ -13,6 +13,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.zxing.integration.android.IntentIntegrator
+import com.journeyapps.barcodescanner.CaptureActivity
+import com.google.zxing.integration.android.IntentResult
+
 
 
 class MainActivity : AppCompatActivity() {
@@ -71,6 +75,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         joinByQRButton.setOnClickListener{
+            val integrator = IntentIntegrator(this)
+            integrator.setCaptureActivity(CaptureActivity::class.java)
+            integrator.setOrientationLocked(true)
+            integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
+            integrator.setPrompt("Scan a QR Code")
+            integrator.initiateScan()
         }
 
 
