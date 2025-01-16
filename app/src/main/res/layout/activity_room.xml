@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".roomActivity"
+    tools:context=".RoomActivity"
     android:background="@drawable/background">
 
     <LinearLayout
@@ -53,7 +53,7 @@
             app:srcCompat="@drawable/qr_png" />
 
         <TextView
-            android:id="@+id/selectGenre"
+            android:id="@+id/CopyCode"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -67,11 +67,12 @@
             android:id="@+id/codeButton"
             android:layout_width="120dp"
             android:layout_height="wrap_content"
-            android:text="42069"
+            android:text="420690"
             android:background="@drawable/custom_input"
             android:textColor="@color/white"
             android:textSize="18sp"
-            android:drawableEnd="@drawable/copy_icon"
+            android:drawableRight="@drawable/copy_icon"
+            android:drawablePadding="8dp"
             android:padding="8dp"
             android:layout_marginTop="8dp"
             />

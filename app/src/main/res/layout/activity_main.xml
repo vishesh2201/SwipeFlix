@@ -107,6 +107,22 @@
 
 
             </LinearLayout>
+            <Button
+                android:id="@+id/join_session"
+                android:layout_width="300dp"
+                android:layout_height="60dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/host_a_session"
+                android:backgroundTint="@null"
+                android:fontFamily="@font/nats"
+                android:text="@string/join_a_session"
+                android:textAlignment="center"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="22sp"
+                app:cornerRadius="15dp"
+                tools:ignore="TextSizeCheck" />
+
         </LinearLayout>
 
     </LinearLayout>
