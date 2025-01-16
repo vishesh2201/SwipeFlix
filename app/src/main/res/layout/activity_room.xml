@@ -11,22 +11,98 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal">
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="16dp">
 
-            <TextView
-                android:id="@+id/swipeflixS"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="S"
-                android:fontFamily="@font/micro5"
-                android:textColor="@color/white"
-                android:textSize="100sp"/>
+
+            <ImageView
+                android:id="@+id/swipeFlixS"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:padding="16dp"
+                android:scaleType="centerCrop"
+                app:srcCompat="@drawable/logo" />
+
+            <View
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_weight="1" />
+
+            <ImageButton
+                android:id="@+id/infoButton"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:background="#00000000"
+                android:padding="18dp"
+                android:scaleType="centerCrop"
+                app:srcCompat="@drawable/info_icon"
+                tools:ignore="SpeakableTextPresentCheck" />
         </LinearLayout>
+
+        <ImageView
+            android:id="@+id/qrCode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/qr_png" />
+
+        <TextView
+            android:id="@+id/selectGenre"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/nats"
+            android:text="Scan QR or Copy Code"
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/codeButton"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:text="42069"
+            android:background="@drawable/custom_input"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:drawableEnd="@drawable/copy_icon"
+            android:padding="8dp"
+            android:layout_marginTop="8dp"
+            />
+
+        <TextView
+            android:id="@+id/selectGenre"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/nats"
+            android:text="Select Genre: "
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            tools:ignore="DuplicateIds" />
+
+        <Button
+            android:id="@+id/host_session"
+            android:layout_width="200dp"
+            android:layout_height="60dp"
+            android:background="@drawable/host_a_session"
+            android:backgroundTint="@null"
+            android:fontFamily="@font/nats"
+            android:text="Start Swiping"
+            android:textAlignment="center"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="22sp"
+            app:cornerRadius="15dp"
+            tools:ignore="TextSizeCheck" />
+
+
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
