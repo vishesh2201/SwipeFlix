@@ -18,16 +18,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SwipeFlix"
         tools:targetApi="31">
-        <activity
-            android:name=".CustomCaptureActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:configChanges="orientation|screenSize|keyboardHidden"/>
+
         <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
             android:screenOrientation="fullSensor"
             android:theme="@style/zxingTheme"
-            tools:replace="android:screenOrientation, android:theme" />
+            tools:replace="android:screenOrientation, android:theme"
+            tools:ignore="DiscouragedApi" />
         <activity
             android:name=".RoomActivity"
             android:exported="false"
