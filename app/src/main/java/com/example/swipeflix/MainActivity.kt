@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.swipeflix
 
 import android.annotation.SuppressLint
@@ -15,7 +17,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.zxing.integration.android.IntentIntegrator
 import com.journeyapps.barcodescanner.CaptureActivity
-import com.google.zxing.integration.android.IntentResult
 
 
 
@@ -65,7 +66,7 @@ class MainActivity : AppCompatActivity() {
             val enteredCode = joinCodeEditText.text.toString().trim()
 
             if (nickname.length <= 2) {
-                Toast.makeText(this, "=Enter Nickname", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Enter Nickname", Toast.LENGTH_SHORT).show()
             } else if (enteredCode != "420690") {
                 Toast.makeText(this, "Invalid code. Please try again.", Toast.LENGTH_SHORT).show()
             } else {
@@ -74,15 +75,36 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        joinByQRButton.setOnClickListener{
-            val integrator = IntentIntegrator(this)
-            integrator.setCaptureActivity(CaptureActivity::class.java)
-            integrator.setOrientationLocked(true)
-            integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
-            integrator.setPrompt("Scan a QR Code")
-            integrator.initiateScan()
+        joinByQRButton.setOnClickListener {
+            val nickname = nicknameEditText.text.toString().trim()
+
+            if (nickname.length <= 2) {
+                Toast.makeText(this, "Enter Nickname", Toast.LENGTH_SHORT).show()
+            } else {
+                // Initiate the QR scan if the nickname is valid
+                val integrator = IntentIntegrator(this)
+                integrator.setCaptureActivity(CaptureActivity::class.java)
+                integrator.setOrientationLocked(true)
+                integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
+                integrator.setPrompt("Scan a QR Code")
+                integrator.initiateScan()
+            }
         }
 
 
+
+    }
+    @Deprecated("This method has been deprecated in favor of using the Activity Result API\n      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt\n      contracts for common intents available in\n      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for\n      testing, and allow receiving results in separate, testable classes independent from your\n      activity. Use\n      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}\n      with the appropriate {@link ActivityResultContract} and handling the result in the\n      {@link ActivityResultCallback#onActivityResult(Object) callback}.")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
+        if (result != null) {
+            if (result.contents == null) {
+                Toast.makeText(this, "Cancelled", Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(this, "Scanned: ${result.contents}", Toast.LENGTH_LONG).show()
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data)
+        }
     }
 }
