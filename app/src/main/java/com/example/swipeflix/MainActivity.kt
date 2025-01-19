@@ -8,6 +8,7 @@ import android.text.InputType
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -44,6 +45,9 @@ class MainActivity : AppCompatActivity() {
 
         // Host session button logic
         hostSessionButton.setOnClickListener {
+
+            animate1()
+
             val nickname = nicknameEditText.text.toString().trim() // Get and trim the nickname input
 
             // Check if the nickname is valid
@@ -82,6 +86,50 @@ class MainActivity : AppCompatActivity() {
             integrator.setPrompt("Scan a QR Code")
             integrator.initiateScan()
         }
+
+
+
+
+    }
+    private fun animate1(){
+        val nicknameEditText: EditText = findViewById(R.id.nickname)
+        val joinCodeEditText: EditText = findViewById(R.id.joincode)
+        val hostSessionButton: Button = findViewById(R.id.host_session)
+        val joinSessionButton: Button = findViewById(R.id.join_session)
+        val joinByQRButton: ImageButton = findViewById(R.id.joinByQRButton)
+        val swipeFlixEditText: TextView = findViewById(R.id.swipeflix_Text)
+
+        swipeFlixEditText.animate()
+            .alpha(0f)
+            .translationY(-100f)
+            .setDuration(500)
+            .start()
+
+        nicknameEditText.animate()
+            .alpha(0f)
+            .translationY(-100f)
+            .setDuration(500)
+            .start()
+
+        joinCodeEditText.animate()
+            .alpha(0f)
+            .translationY(100f)
+            .setDuration(500)
+            .start()
+
+        joinByQRButton.animate()
+            .alpha(0f)
+            .translationY(100f)
+            .setDuration(500)
+            .start()
+
+        joinSessionButton.animate()
+            .alpha(0f)
+            .translationY(100f)
+            .setDuration(500)
+            .start()
+
+
 
 
     }
