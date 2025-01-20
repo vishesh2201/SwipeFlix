@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "984132477978",
+    "project_id": "swipeflix-80242",
+    "storage_bucket": "swipeflix-80242.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:984132477978:android:63e54dfef54ee088af5da3",
+        "android_client_info": {
+          "package_name": "com.example.swipeflix"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAlxgPR_6VvVzLCCRjO5cyaKBG_ubOBxyI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
