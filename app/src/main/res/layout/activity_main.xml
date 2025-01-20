@@ -57,7 +57,7 @@
                 tools:ignore="Autofill,TextContrastCheck" />
 
             <Button
-                android:id="@+id/startSwiping"
+                android:id="@+id/host_a_session"
                 android:layout_width="300dp"
                 android:layout_height="60dp"
                 android:background="@drawable/host_a_session"

@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
 
         val nicknameEditText: EditText = findViewById(R.id.nickname)
         val joinCodeEditText: EditText = findViewById(R.id.joincode)
-        val hostSessionButton: Button = findViewById(R.id.host_session)
+        val hostSessionButton: Button = findViewById(R.id.host_a_session)
         val joinSessionButton: Button = findViewById(R.id.join_session)
         val joinByQRButton: ImageButton = findViewById(R.id.joinByQRButton)
 
