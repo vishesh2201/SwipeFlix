@@ -90,7 +90,7 @@
             tools:ignore="DuplicateIds" />
 
         <Button
-            android:id="@+id/host_session"
+            android:id="@+id/startSwiping"
             android:layout_width="200dp"
             android:layout_height="60dp"
             android:background="@drawable/host_a_session"
