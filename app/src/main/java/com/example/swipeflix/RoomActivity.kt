@@ -12,10 +12,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.firebase.database.*
 
 @Suppress("SameParameterValue")
 class RoomActivity : AppCompatActivity() {
+
+    private lateinit var db: DatabaseReference
     private lateinit var membersTextView: TextView
+    private var previousMembers = mutableSetOf<String>()
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,28 +27,56 @@ class RoomActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_room)
 
-        // Handle edge-to-edge insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        // Initialize views
         val codeButton: Button = findViewById(R.id.codeButton)
         membersTextView = findViewById(R.id.members)
 
-        // Get room code passed via Intent
+        db = FirebaseDatabase.getInstance().reference
+
         val roomCode = intent.getStringExtra("roomCode") ?: "Unknown Room"
         codeButton.text = roomCode
 
-        // Set up the copy-to-clipboard functionality
         codeButton.setOnClickListener {
             copyToClipboard("Session Code", codeButton.text.toString())
         }
+
+        // Listen for changes in members and update the TextView
+        listenForMemberUpdates(roomCode)
     }
 
-    // Copy text to clipboard
+    private fun listenForMemberUpdates(roomCode: String) {
+        db.child("rooms").child(roomCode).child("members")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val membersList = mutableListOf<String>()
+                    for (memberSnapshot in snapshot.children) {
+                        val memberName = memberSnapshot.key
+                        memberName?.let {
+                            membersList.add(it)
+                            if (it !in previousMembers) {
+                                previousMembers.add(it)
+                                // Show a toast when a new member joins
+                                showToast("$it Joined")
+                            }
+                        }
+                    }
+
+                    // Update TextView with "Members:" followed by member names
+                    val membersText = "Members:\n" + membersList.joinToString("\n")
+                    membersTextView.text = membersText
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(this@RoomActivity, "Failed to load members.", Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
+
     private fun copyToClipboard(label: String, text: String) {
         val clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText(label, text)
@@ -52,8 +84,6 @@ class RoomActivity : AppCompatActivity() {
         showToast("Code copied to clipboard!")
     }
 
-
-    // Show a Toast message
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }

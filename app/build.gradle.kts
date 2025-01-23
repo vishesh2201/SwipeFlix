@@ -67,10 +67,11 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
-    implementation("androidx.core:core-ktx:1.9.0")
+    implementation(libs.firebase.database)
 
-    implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
 
-    // Cloud Firestore
-    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation(libs.androidx.core.ktx)
+
+    implementation(platform(libs.firebase.bom))
+
 }

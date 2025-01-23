@@ -1,6 +1,7 @@
 [versions]
 agp = "8.5.1"
 appcompatVersion = "1.6.1"
+firebaseBom = "33.8.0"
 firebaseDatabaseKtx = "20.2.2"
 kotlin = "1.9.0"
 coreKtx = "1.15.0"
@@ -24,6 +25,8 @@ firebaseDatabaseKtxVersion = "21.0.0"
 [libraries]
 androidx-appcompat-v161 = { module = "androidx.appcompat:appcompat", version.ref = "appcompatVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-database = { module = "com.google.firebase:firebase-database", version.ref = "firebaseCommonKtx" }
 firebase-database-ktx = { module = "com.google.firebase:firebase-database-ktx", version.ref = "firebaseDatabaseKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

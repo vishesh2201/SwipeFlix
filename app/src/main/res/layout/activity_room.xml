@@ -21,7 +21,6 @@
             android:orientation="horizontal"
             android:padding="16dp">
 
-
             <ImageView
                 android:id="@+id/swipeFlixS"
                 android:layout_width="72dp"
@@ -74,8 +73,7 @@
             android:drawableRight="@drawable/copy_icon"
             android:drawablePadding="8dp"
             android:padding="8dp"
-            android:layout_marginTop="8dp"
-            />
+            android:layout_marginTop="8dp" />
 
         <TextView
             android:id="@+id/selectGenre"
@@ -89,34 +87,38 @@
             android:textSize="18sp"
             tools:ignore="DuplicateIds" />
 
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:layout_marginTop="8dp">
+
         <TextView
             android:id="@+id/members"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:fontFamily="@font/nats"
             android:text="Members:"
             android:textAlignment="center"
             android:textColor="@color/white"
             android:textSize="18sp"
             tools:ignore="DuplicateIds" />
+    </ScrollView>
 
+    <Button
+        android:id="@+id/startSwiping"
+        android:layout_width="200dp"
+        android:layout_height="60dp"
+        android:background="@drawable/host_a_session"
+        android:backgroundTint="@null"
+        android:fontFamily="@font/nats"
+        android:text="Start Swiping"
+        android:textAlignment="center"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="22sp"
+        app:cornerRadius="15dp"
+        tools:ignore="TextSizeCheck" />
 
-        <Button
-            android:id="@+id/startSwiping"
-            android:layout_width="200dp"
-            android:layout_height="60dp"
-            android:background="@drawable/host_a_session"
-            android:backgroundTint="@null"
-            android:fontFamily="@font/nats"
-            android:text="Start Swiping"
-            android:textAlignment="center"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="22sp"
-            app:cornerRadius="15dp"
-            tools:ignore="TextSizeCheck" />
-
-
-    </LinearLayout>
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
