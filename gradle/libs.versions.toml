@@ -17,6 +17,7 @@ zxingAndroidEmbedded = "4.3.0"
 googleGmsGoogleServices = "4.3.14"
 firebaseFirestore = "24.4.1"
 firebaseFirestoreKtx = "24.4.1"
+firebaseAuthKtx = "23.1.0"
 
 [libraries]
 androidx-appcompat-v161 = { module = "androidx.appcompat:appcompat", version.ref = "appcompatVersion" }
@@ -34,6 +35,7 @@ androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation
 zxing-android-embedded = { module = "com.journeyapps:zxing-android-embedded", version.ref = "zxingAndroidEmbedded" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
+firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

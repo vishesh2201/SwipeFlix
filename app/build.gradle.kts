@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -56,9 +57,18 @@ dependencies {
 
     // Backward compatibility (AppCompat v1.6.1)
     implementation(libs.androidx.appcompat.v161)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth.ktx)
 
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    implementation("androidx.core:core-ktx:1.9.0")
+
+    implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
+
+    // Cloud Firestore
+    implementation("com.google.firebase:firebase-firestore-ktx")
 }
