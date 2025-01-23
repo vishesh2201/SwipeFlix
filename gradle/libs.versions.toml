@@ -18,6 +18,8 @@ googleGmsGoogleServices = "4.3.14"
 firebaseFirestore = "24.4.1"
 firebaseFirestoreKtx = "24.4.1"
 firebaseAuthKtx = "23.1.0"
+firebaseCommonKtx = "21.0.0"
+firebaseDatabaseKtxVersion = "21.0.0"
 
 [libraries]
 androidx-appcompat-v161 = { module = "androidx.appcompat:appcompat", version.ref = "appcompatVersion" }
@@ -36,6 +38,8 @@ zxing-android-embedded = { module = "com.journeyapps:zxing-android-embedded", ve
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
 firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
+firebase-common-ktx = { group = "com.google.firebase", name = "firebase-common-ktx", version.ref = "firebaseCommonKtx" }
+google-firebase-database-ktx = { group = "com.google.firebase", name = "firebase-database-ktx", version.ref = "firebaseDatabaseKtxVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

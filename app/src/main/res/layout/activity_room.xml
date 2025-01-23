@@ -89,6 +89,19 @@
             android:textSize="18sp"
             tools:ignore="DuplicateIds" />
 
+        <TextView
+            android:id="@+id/members"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/nats"
+            android:text="Members:"
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            tools:ignore="DuplicateIds" />
+
+
         <Button
             android:id="@+id/startSwiping"
             android:layout_width="200dp"

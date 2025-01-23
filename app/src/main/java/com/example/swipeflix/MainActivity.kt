@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.swipeflix
 
 import android.annotation.SuppressLint
@@ -8,22 +10,19 @@ import android.text.InputType
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.firestore
 import com.google.zxing.integration.android.IntentIntegrator
 import com.journeyapps.barcodescanner.CaptureActivity
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
+@Suppress("DEPRECATION")
 class MainActivity : AppCompatActivity() {
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,9 +36,6 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-
-        //Firebase
-        val db = Firebase.firestore
 
 
         val nicknameEditText: EditText = findViewById(R.id.nickname)
@@ -68,7 +64,6 @@ class MainActivity : AppCompatActivity() {
                     val intent = Intent(this@MainActivity, RoomActivity::class.java)
                     intent.putExtra("roomCode", roomCode)
                     startActivity(intent)
-                    animate1()
                 } else {
                     // Show an error message if the nickname is invalid
                     Toast.makeText(this@MainActivity, "Enter Nickname", Toast.LENGTH_SHORT).show()
@@ -88,12 +83,10 @@ class MainActivity : AppCompatActivity() {
             } else {
                 // Join the room and add user to memberIDs
                 lifecycleScope.launch {
-                    val memberName = nickname
-                    joinRoom(enteredCode, memberName) // Call the joinRoom function
+                    joinRoom(enteredCode, nickname) // Call the joinRoom function
                     val intent = Intent(this@MainActivity, RoomActivity::class.java)
                     intent.putExtra("roomCode", enteredCode)
                     startActivity(intent)
-                    animate1()
                 }
             }
         }
@@ -107,83 +100,10 @@ class MainActivity : AppCompatActivity() {
             integrator.initiateScan()
         }
     }
-    private fun animate1() {
-        val nicknameEditText: EditText = findViewById(R.id.nickname)
-        val joinCodeEditText: EditText = findViewById(R.id.joincode)
-        val hostSessionButton: Button = findViewById(R.id.host_a_session)
-        val joinSessionButton: Button = findViewById(R.id.join_session)
-        val joinByQRButton: ImageButton = findViewById(R.id.joinByQRButton)
-        val swipeFlixEditText: TextView = findViewById(R.id.swipeflix_Text)
-
-        // Fade and move all elements
-        swipeFlixEditText.animate()
-            .alpha(0f)
-            .translationY(-100f)
-            .setDuration(500)
-            .start()
-
-        nicknameEditText.animate()
-            .alpha(0f)
-            .translationY(-100f)
-            .setDuration(500)
-            .start()
-
-        joinCodeEditText.animate()
-            .alpha(0f)
-            .translationY(100f)
-            .setDuration(500)
-            .start()
-
-        joinByQRButton.animate()
-            .alpha(0f)
-            .translationY(100f)
-            .setDuration(500)
-            .start()
-
-        joinSessionButton.animate()
-            .alpha(0f)
-            .translationY(100f)
-            .setDuration(500)
-            .start()
-
-        // Add a delay for the activity transition
-        hostSessionButton.animate()
-            .alpha(0f)
-            .translationY(-100f)
-            .setDuration(500)
-            .withEndAction {
-                // Navigate to the next activity after animations complete
-                val intent = Intent(this, RoomActivity::class.java)
-                startActivity(intent)
-                overridePendingTransition(0, 0)
-            }
-            .start()
-    }
 
 
-    private fun resetViewProperties(vararg views: android.view.View) {
-        views.forEach { view ->
-            view.animate()
-                .alpha(1f)          // Animate alpha to 1 (fully visible)
-                .scaleX(1f)         // Animate scaleX to default size
-                .scaleY(1f)         // Animate scaleY to default size
-                .translationY(0f)   // Animate translationY to the original position
-                .setDuration(500)   // Set animation duration to 500ms
-                .start()            // Start the animation
-        }
-    }
 
-    override fun onResume(){
-        val nicknameEditText: EditText = findViewById(R.id.nickname)
-        val joinCodeEditText: EditText = findViewById(R.id.joincode)
-        val hostSessionButton: Button = findViewById(R.id.host_a_session)
-        val joinSessionButton: Button = findViewById(R.id.join_session)
-        val joinByQRButton: ImageButton = findViewById(R.id.joinByQRButton)
-        val swipeFlixEditText: TextView = findViewById(R.id.swipeflix_Text)
-        super.onResume()
-        resetViewProperties(hostSessionButton, nicknameEditText, joinCodeEditText, joinSessionButton, joinByQRButton, swipeFlixEditText)
 
-    }
 
     private val db = FirebaseFirestore.getInstance()
 
@@ -205,7 +125,7 @@ class MainActivity : AppCompatActivity() {
             "hostTimestamp" to currentTimestamp
         )
         db.collection("rooms").document(roomCode).set(roomData)
-            .addOnSuccessListener { documentReference ->
+            .addOnSuccessListener { _ ->
                 // Room created successfully
             }
             .addOnFailureListener { e ->
