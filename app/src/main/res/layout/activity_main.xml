@@ -111,7 +111,7 @@
                 android:id="@+id/join_session"
                 android:layout_width="300dp"
                 android:layout_height="60dp"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="8dp"
                 android:background="@drawable/host_a_session"
                 android:backgroundTint="@null"
                 android:fontFamily="@font/nats"
