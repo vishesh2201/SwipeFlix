@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
@@ -40,7 +41,13 @@ class RoomActivity : AppCompatActivity() {
         }
 
         val codeButton: Button = findViewById(R.id.codeButton)
+        val startSwipingButton: Button = findViewById(R.id.startSwiping)
         membersTextView = findViewById(R.id.members)
+
+        startSwipingButton.setOnClickListener{
+            val intent = Intent(this, SwipeActivity::class.java)
+            startActivity(intent)
+        }
 
         db = FirebaseDatabase.getInstance().reference
 
@@ -55,6 +62,7 @@ class RoomActivity : AppCompatActivity() {
         // Listen for changes in members and update the TextView
         listenForMemberUpdates(roomCode)
     }
+
 
     private fun generateQRAsPNG(roomCode: String) {
         try {

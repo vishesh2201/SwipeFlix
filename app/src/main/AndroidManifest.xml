@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
     <!-- Permissions -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- Features -->
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- Features -->
     <uses-feature
         android:name="android.hardware.camera"
         android:required="true" />
@@ -21,30 +18,29 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SwipeFlix"
         tools:targetApi="31">
-
+        <activity
+            android:name=".SwipeActivity"
+            android:exported="false" />
         <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <!-- Room Activity -->
+        </activity> <!-- Room Activity -->
         <activity
             android:name=".RoomActivity"
             android:exported="false"
-            android:theme="@style/Theme.SwipeFlix" />
-
-        <!-- Capture Activity for QR Code Scanner -->
+            android:theme="@style/Theme.SwipeFlix" /> <!-- Capture Activity for QR Code Scanner -->
         <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
             android:screenOrientation="fullSensor"
             android:theme="@style/zxingTheme"
-            tools:replace="android:screenOrientation,android:theme"
-            tools:ignore="DiscouragedApi" />
+            tools:ignore="DiscouragedApi"
+            tools:replace="android:screenOrientation,android:theme" />
     </application>
 
 </manifest>
