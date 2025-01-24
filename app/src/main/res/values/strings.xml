@@ -49,4 +49,5 @@
     <string name="join_a_session">Join A Session</string>
     <string name="scan_from_photo">Scan from photo</string>
     <string name="scan_qr_code">Scan QR code</string>
+    <string name="members">Members:</string>
 </resources>

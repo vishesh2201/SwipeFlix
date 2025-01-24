@@ -17,6 +17,8 @@ import android.graphics.Bitmap
 import android.widget.ImageView
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
+import java.io.File
+import java.io.FileOutputStream
 
 @Suppress("SameParameterValue")
 class RoomActivity : AppCompatActivity() {
@@ -43,7 +45,7 @@ class RoomActivity : AppCompatActivity() {
         db = FirebaseDatabase.getInstance().reference
 
         val roomCode = intent.getStringExtra("roomCode") ?: "Unknown Room"
-        generateQRCode(roomCode)
+        generateQRAsPNG(roomCode)
         codeButton.text = roomCode
 
         codeButton.setOnClickListener {
@@ -54,20 +56,36 @@ class RoomActivity : AppCompatActivity() {
         listenForMemberUpdates(roomCode)
     }
 
-    private fun generateQRCode(roomCode: String) {
-        val qrCodeWriter = QRCodeWriter()
+    private fun generateQRAsPNG(roomCode: String) {
         try {
-            val bitMatrix = qrCodeWriter.encode(roomCode, BarcodeFormat.QR_CODE, 300, 300)
+            // Generate QR Code bitmap
+            val writer = QRCodeWriter()
+            val bitMatrix = writer.encode(roomCode, BarcodeFormat.QR_CODE, 500, 500)
             val width = bitMatrix.width
             val height = bitMatrix.height
             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+
             for (x in 0 until width) {
                 for (y in 0 until height) {
-                    bitmap.setPixel(x, y, if (bitMatrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+                    bitmap.setPixel(
+                        x,
+                        y,
+                        if (bitMatrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+                    )
                 }
             }
-            val qrImageView: ImageView = findViewById(R.id.qrCode)
-            qrImageView.setImageBitmap(bitmap)
+
+            // Save the bitmap as a PNG file
+            val file = File(this.filesDir, "QRCode_$roomCode.png")
+            val outputStream = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+            outputStream.flush()
+            outputStream.close()
+
+            // Display the saved QR Code in the ImageView
+            val qrCodeImageView: ImageView = findViewById(R.id.qrCode)
+            qrCodeImageView.setImageBitmap(bitmap)
+
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(this, "Failed to generate QR Code", Toast.LENGTH_SHORT).show()
@@ -91,13 +109,14 @@ class RoomActivity : AppCompatActivity() {
                         }
                     }
 
-                    // Update TextView with "Members:" followed by member names
-                    val membersText = "Members:\n" + membersList.joinToString("\n")
+                    // Update TextView with the member names only
+                    val membersText = membersList.joinToString("\n")
                     membersTextView.text = membersText
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@RoomActivity, "Failed to load members.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@RoomActivity, "Failed to load members.", Toast.LENGTH_SHORT)
+                        .show()
                 }
             })
     }
@@ -113,3 +132,4 @@ class RoomActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }
+

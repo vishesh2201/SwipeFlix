@@ -71,6 +71,7 @@ dependencies {
 
 
     implementation(libs.androidx.core.ktx)
+    implementation ("com.google.zxing:core:3.5.2")
 
     implementation(platform(libs.firebase.bom))
 
