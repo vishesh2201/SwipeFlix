@@ -75,22 +75,55 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        joinByQRButton.setOnClickListener{
-            val integrator = IntentIntegrator(this)
-            integrator.setCaptureActivity(CaptureActivity::class.java)
-            integrator.setOrientationLocked(true)
-            integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
-            integrator.setPrompt("Scan a QR Code")
-            integrator.initiateScan()
+        joinByQRButton.setOnClickListener {
+            val nickname = nicknameEditText.text.toString().trim()
+
+            if (nickname.isEmpty() || nickname.length <= 2) {
+                Toast.makeText(this, "Enter a valid Nickname", Toast.LENGTH_SHORT).show()
+            } else {
+                val integrator = IntentIntegrator(this)
+                integrator.setCaptureActivity(CaptureActivity::class.java)
+                integrator.setOrientationLocked(true)
+                integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
+                integrator.setPrompt("Scan a QR Code")
+                integrator.initiateScan()
+            }
+        }
+
+    }
+
+    @Deprecated("This method has been deprecated in favor of using the Activity Result API\n      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt\n      contracts for common intents available in\n      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for\n      testing, and allow receiving results in separate, testable classes independent from your\n      activity. Use\n      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}\n      with the appropriate {@link ActivityResultContract} and handling the result in the\n      {@link ActivityResultCallback#onActivityResult(Object) callback}.")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
+        if (result != null) {
+            if (result.contents != null) {
+                val scannedRoomCode = result.contents
+                val nickname = findViewById<EditText>(R.id.nickname).text.toString().trim()
+
+                if (nickname.length <= 2) {
+                    Toast.makeText(this, "Enter Nickname", Toast.LENGTH_SHORT).show()
+                } else {
+                    // Join the room using the scanned room code
+                    joinRoom(scannedRoomCode, nickname)
+                    val intent = Intent(this, RoomActivity::class.java)
+                    intent.putExtra("roomCode", scannedRoomCode)
+                    startActivity(intent)
+                }
+            } else {
+                Toast.makeText(this, "Scan cancelled", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data)
         }
     }
+
+
 
     private fun createRoom(nickname: String): String {
         val roomCode = generateUniqueRoomCode()
         val roomData = mapOf(
             "host" to nickname,
             "genre" to "",
-            "currentMovie" to "",
             "members" to mapOf(nickname to true)
         )
         db.child("rooms").child(roomCode).setValue(roomData)

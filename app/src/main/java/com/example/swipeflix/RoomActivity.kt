@@ -13,6 +13,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.firebase.database.*
+import android.graphics.Bitmap
+import android.widget.ImageView
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
 
 @Suppress("SameParameterValue")
 class RoomActivity : AppCompatActivity() {
@@ -39,6 +43,7 @@ class RoomActivity : AppCompatActivity() {
         db = FirebaseDatabase.getInstance().reference
 
         val roomCode = intent.getStringExtra("roomCode") ?: "Unknown Room"
+        generateQRCode(roomCode)
         codeButton.text = roomCode
 
         codeButton.setOnClickListener {
@@ -47,6 +52,26 @@ class RoomActivity : AppCompatActivity() {
 
         // Listen for changes in members and update the TextView
         listenForMemberUpdates(roomCode)
+    }
+
+    private fun generateQRCode(roomCode: String) {
+        val qrCodeWriter = QRCodeWriter()
+        try {
+            val bitMatrix = qrCodeWriter.encode(roomCode, BarcodeFormat.QR_CODE, 300, 300)
+            val width = bitMatrix.width
+            val height = bitMatrix.height
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+            for (x in 0 until width) {
+                for (y in 0 until height) {
+                    bitmap.setPixel(x, y, if (bitMatrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+                }
+            }
+            val qrImageView: ImageView = findViewById(R.id.qrCode)
+            qrImageView.setImageBitmap(bitmap)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Failed to generate QR Code", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun listenForMemberUpdates(roomCode: String) {
