@@ -26,6 +26,7 @@ class RoomActivity : AppCompatActivity() {
 
     private lateinit var db: DatabaseReference
     private lateinit var membersTextView: TextView
+    private lateinit var roomStatusListener: ValueEventListener
     private var previousMembers = mutableSetOf<String>()
 
     @SuppressLint("MissingInflatedId")
@@ -61,8 +62,43 @@ class RoomActivity : AppCompatActivity() {
 
         // Listen for changes in members and update the TextView
         listenForMemberUpdates(roomCode)
+
+
+        roomStatusListener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val status = snapshot.getValue(String::class.java)
+                if (status == "closed") {
+                    val intent = Intent(this@RoomActivity, MainActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                    finish()
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                showToast("Failed to check room status.")
+            }
+        }
+
+        // Attach the listener to the database reference
+        db.child("rooms").child(roomCode).child("status")
+            .addValueEventListener(roomStatusListener)
+
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        val roomCode = intent.getStringExtra("roomCode") ?: return
+
+        // Remove Firebase listeners to avoid multiple triggers
+        db.child("rooms").child(roomCode).child("status").removeEventListener(roomStatusListener)
+
+        // Set the room status to "closed" and delete the room
+        db.child("rooms").child(roomCode).child("status").setValue("closed")
+            .addOnCompleteListener {
+                deleteRoom()
+            }
+    }
 
     private fun generateQRAsPNG(roomCode: String) {
         try {
@@ -94,8 +130,6 @@ class RoomActivity : AppCompatActivity() {
             // Display the saved QR Code in the ImageView
             val qrCodeImageView: ImageView = findViewById(R.id.qrCode)
             qrCodeImageView.setImageBitmap(bitmap)
-
-            Toast.makeText(this, "QR Code saved as transparent PNG", Toast.LENGTH_SHORT).show()
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -143,5 +177,13 @@ class RoomActivity : AppCompatActivity() {
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
+
+    private fun deleteRoom() {
+        val roomCode = intent.getStringExtra("roomCode") ?: return
+        // Remove the room node from Firebase
+        db.child("rooms").child(roomCode).removeValue()
+    }
+
+
 }
 
