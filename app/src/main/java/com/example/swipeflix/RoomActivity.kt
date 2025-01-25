@@ -71,10 +71,11 @@ class RoomActivity : AppCompatActivity() {
             val bitMatrix = writer.encode(roomCode, BarcodeFormat.QR_CODE, 500, 500)
             val width = bitMatrix.width
             val height = bitMatrix.height
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888) // ARGB_8888 supports transparency
 
             for (x in 0 until width) {
                 for (y in 0 until height) {
+                    // Set the pixel color: Transparent for black, White for QR code
                     bitmap.setPixel(
                         x,
                         y,
@@ -94,11 +95,14 @@ class RoomActivity : AppCompatActivity() {
             val qrCodeImageView: ImageView = findViewById(R.id.qrCode)
             qrCodeImageView.setImageBitmap(bitmap)
 
+            Toast.makeText(this, "QR Code saved as transparent PNG", Toast.LENGTH_SHORT).show()
+
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(this, "Failed to generate QR Code", Toast.LENGTH_SHORT).show()
         }
     }
+
 
     private fun listenForMemberUpdates(roomCode: String) {
         db.child("rooms").child(roomCode).child("members")
