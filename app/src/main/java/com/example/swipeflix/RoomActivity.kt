@@ -170,14 +170,10 @@ class RoomActivity : AppCompatActivity() {
     private fun checkIfHost(roomCode: String, nickname: String, startSwipingButton: Button) {
         db.child("rooms").child(roomCode).child("host").get().addOnSuccessListener { snapshot ->
             val host = snapshot.getValue(String::class.java)
-            Log.d("RoomActivity", "Nickname: $nickname, Host: $host")  // Debug log
-
             if (nickname == host) {
                 startSwipingButton.visibility = Button.VISIBLE
-                Log.d("RoomActivity", "Button should be visible for the host.")
             } else {
                 startSwipingButton.visibility = Button.GONE
-                Log.d("RoomActivity", "Button is hidden for non-host.")
             }
         }
 
