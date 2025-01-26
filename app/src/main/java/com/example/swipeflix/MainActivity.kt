@@ -86,7 +86,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         joinByQRButton.setOnClickListener {
-            var nickname = nicknameEditText.text.toString().trim() // Use var instead of val
+            val nickname = nicknameEditText.text.toString().trim() // Use var instead of val
 
             if (nickname.isEmpty() || nickname.length <= 2) {
                 Toast.makeText(this, "Enter a valid Nickname", Toast.LENGTH_SHORT).show()
