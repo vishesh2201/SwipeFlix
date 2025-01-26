@@ -46,13 +46,17 @@ class MainActivity : AppCompatActivity() {
         joinCodeEditText.filters = arrayOf(InputFilter.LengthFilter(6))
 
         hostSessionButton.setOnClickListener {
-            val nickname = nicknameEditText.text.toString().trim()
+            var nickname = nicknameEditText.text.toString().trim() // Use var instead of val
 
             if (nickname.length > 2) {
+                // Capitalize the first letter and make the rest lowercase
+                nickname = nickname.replaceFirstChar { it.uppercase() }
+
                 val roomCode = createRoom(nickname)
                 Toast.makeText(this, "Hosting session as $nickname!", Toast.LENGTH_SHORT).show()
                 val intent = Intent(this, RoomActivity::class.java)
                 intent.putExtra("roomCode", roomCode)
+                intent.putExtra("nickname", nickname) // Pass the modified nickname
                 startActivity(intent)
             } else {
                 Toast.makeText(this, "Enter Nickname", Toast.LENGTH_SHORT).show()
@@ -60,27 +64,36 @@ class MainActivity : AppCompatActivity() {
         }
 
         joinSessionButton.setOnClickListener {
-            val nickname = nicknameEditText.text.toString().trim()
-            val enteredCode = joinCodeEditText.text.toString().trim()
+            var nickname = nicknameEditText.text.toString().trim() // Use var instead of val
 
             if (nickname.length <= 2) {
                 Toast.makeText(this, "Enter Nickname", Toast.LENGTH_SHORT).show()
-            } else if (enteredCode.isEmpty()) {
-                Toast.makeText(this, "Enter Room Code", Toast.LENGTH_SHORT).show()
             } else {
-                joinRoom(enteredCode, nickname)
-                val intent = Intent(this, RoomActivity::class.java)
-                intent.putExtra("roomCode", enteredCode)
-                startActivity(intent)
+                // Capitalize the first letter and make the rest lowercase
+                nickname = nickname.replaceFirstChar { it.uppercase() }
+                val enteredCode = joinCodeEditText.text.toString().trim()
+
+                if (enteredCode.isEmpty()) {
+                    Toast.makeText(this, "Enter Room Code", Toast.LENGTH_SHORT).show()
+                } else {
+                    joinRoom(enteredCode, nickname)
+                    val intent = Intent(this, RoomActivity::class.java)
+                    intent.putExtra("roomCode", enteredCode)
+                    intent.putExtra("nickname", nickname) // Pass the modified nickname
+                    startActivity(intent)
+                }
             }
         }
 
         joinByQRButton.setOnClickListener {
-            val nickname = nicknameEditText.text.toString().trim()
+            var nickname = nicknameEditText.text.toString().trim() // Use var instead of val
 
             if (nickname.isEmpty() || nickname.length <= 2) {
                 Toast.makeText(this, "Enter a valid Nickname", Toast.LENGTH_SHORT).show()
             } else {
+                // Capitalize the first letter and make the rest lowercase
+                nickname = nickname.replaceFirstChar { it.uppercase() }
+
                 val integrator = IntentIntegrator(this)
                 integrator.setCaptureActivity(CaptureActivity::class.java)
                 integrator.setOrientationLocked(true)
@@ -90,24 +103,29 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-    }
 
-    @Deprecated("This method has been deprecated in favor of using the Activity Result API\n      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt\n      contracts for common intents available in\n      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for\n      testing, and allow receiving results in separate, testable classes independent from your\n      activity. Use\n      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}\n      with the appropriate {@link ActivityResultContract} and handling the result in the\n      {@link ActivityResultCallback#onActivityResult(Object) callback}.")
+    }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
         if (result != null) {
             if (result.contents != null) {
                 val scannedRoomCode = result.contents
-                val nickname = findViewById<EditText>(R.id.nickname).text.toString().trim()
+                var nickname = findViewById<EditText>(R.id.nickname).text.toString().trim()
+
+                // Capitalize the first letter and make the rest lowercase
+                nickname = nickname.replaceFirstChar { it.uppercase() }
 
                 if (nickname.length <= 2) {
                     Toast.makeText(this, "Enter Nickname", Toast.LENGTH_SHORT).show()
                 } else {
-                    // Join the room using the scanned room code
-                    joinRoom(scannedRoomCode, nickname)
+                    // Join the room using the scanned room code and the capitalized nickname
                     val intent = Intent(this, RoomActivity::class.java)
                     intent.putExtra("roomCode", scannedRoomCode)
+                    intent.putExtra("nickname", nickname)
                     startActivity(intent)
+
+                    // Add the user to the room's database members
+                    joinRoom(scannedRoomCode, nickname)
                 }
             } else {
                 Toast.makeText(this, "Scan cancelled", Toast.LENGTH_SHORT).show()
@@ -122,13 +140,14 @@ class MainActivity : AppCompatActivity() {
     private fun createRoom(nickname: String): String {
         val roomCode = generateUniqueRoomCode()
         val roomData = mapOf(
-            "host" to nickname,
+            "host" to nickname,  // Save the host nickname
             "genre" to "",
             "members" to mapOf(nickname to true)
         )
         db.child("rooms").child(roomCode).setValue(roomData)
         return roomCode
     }
+
 
     private fun joinRoom(roomCode: String, nickname: String) {
         db.child("rooms").child(roomCode).child("members").child(nickname).setValue(true)

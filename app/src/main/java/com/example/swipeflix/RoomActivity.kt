@@ -5,8 +5,11 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -14,8 +17,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.firebase.database.*
-import android.graphics.Bitmap
-import android.widget.ImageView
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 import java.io.File
@@ -35,69 +36,73 @@ class RoomActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_room)
 
+        // Apply system bar insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
+        // Initialize UI elements
         val codeButton: Button = findViewById(R.id.codeButton)
         val startSwipingButton: Button = findViewById(R.id.startSwiping)
+        val nickname = intent.getStringExtra("nickname") ?: "Unknown"
+        val roomCode = intent.getStringExtra("roomCode") ?: "Unknown Room"
         membersTextView = findViewById(R.id.members)
 
-        startSwipingButton.setOnClickListener{
+        // Set initial button visibility for the host
+        startSwipingButton.visibility = Button.GONE // Hidden initially
+
+        // Initialize Firebase Database reference
+        db = FirebaseDatabase.getInstance().reference
+
+        // Generate QR Code and display room code
+        generateQRAsPNG(roomCode)
+        codeButton.text = roomCode
+
+        // Copy room code to clipboard when button clicked
+        codeButton.setOnClickListener { copyToClipboard("Session Code", codeButton.text.toString()) }
+
+        // Listen for member updates in the room
+        listenForMemberUpdates(roomCode)
+
+        // Check if current user is the host and show button accordingly
+        checkIfHost(roomCode, nickname, startSwipingButton)
+
+        // Handle start swiping button click
+        startSwipingButton.setOnClickListener {
             val intent = Intent(this, SwipeActivity::class.java)
             startActivity(intent)
         }
 
-        db = FirebaseDatabase.getInstance().reference
-
-        val roomCode = intent.getStringExtra("roomCode") ?: "Unknown Room"
-        generateQRAsPNG(roomCode)
-        codeButton.text = roomCode
-
-        codeButton.setOnClickListener {
-            copyToClipboard("Session Code", codeButton.text.toString())
-        }
-
-        // Listen for changes in members and update the TextView
-        listenForMemberUpdates(roomCode)
-
-
-        roomStatusListener = object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val status = snapshot.getValue(String::class.java)
-                if (status == "closed") {
-                    val intent = Intent(this@RoomActivity, MainActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                    finish()
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                showToast("Failed to check room status.")
-            }
-        }
-
-        // Attach the listener to the database reference
-        db.child("rooms").child(roomCode).child("status")
-            .addValueEventListener(roomStatusListener)
-
+        // Listen for room status changes (closed or open)
+        listenForRoomStatus(roomCode)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         val roomCode = intent.getStringExtra("roomCode") ?: return
+        val nickname = intent.getStringExtra("nickname") ?: return
 
-        // Remove Firebase listeners to avoid multiple triggers
-        db.child("rooms").child(roomCode).child("status").removeEventListener(roomStatusListener)
+        db.child("rooms").child(roomCode).child("host").get().addOnSuccessListener { snapshot ->
+            val host = snapshot.getValue(String::class.java)
 
-        // Set the room status to "closed" and delete the room
-        db.child("rooms").child(roomCode).child("status").setValue("closed")
-            .addOnCompleteListener {
-                deleteRoom()
+            if (nickname == host) {
+                // If the nickname is the host, delete the entire room
+                db.child("rooms").child(roomCode).child("status").removeEventListener(roomStatusListener)
+                db.child("rooms").child(roomCode).child("status").setValue("closed")
+                    .addOnCompleteListener {
+                        deleteRoom()
+                    }
+            } else {
+                // If the nickname is not the host, remove the user from the room's members list
+                db.child("rooms").child(roomCode).child("members").child(nickname).removeValue()
+                    .addOnCompleteListener {
+                        // You can add additional logic here if needed after removing the member
+                        showToast("$nickname left the room")
+                    }
             }
+        }
     }
 
     private fun generateQRAsPNG(roomCode: String) {
@@ -112,11 +117,7 @@ class RoomActivity : AppCompatActivity() {
             for (x in 0 until width) {
                 for (y in 0 until height) {
                     // Set the pixel color: Transparent for black, White for QR code
-                    bitmap.setPixel(
-                        x,
-                        y,
-                        if (bitMatrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE
-                    )
+                    bitmap.setPixel(x, y, if (bitMatrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
                 }
             }
 
@@ -136,7 +137,6 @@ class RoomActivity : AppCompatActivity() {
             Toast.makeText(this, "Failed to generate QR Code", Toast.LENGTH_SHORT).show()
         }
     }
-
 
     private fun listenForMemberUpdates(roomCode: String) {
         db.child("rooms").child(roomCode).child("members")
@@ -167,6 +167,44 @@ class RoomActivity : AppCompatActivity() {
             })
     }
 
+    private fun checkIfHost(roomCode: String, nickname: String, startSwipingButton: Button) {
+        db.child("rooms").child(roomCode).child("host").get().addOnSuccessListener { snapshot ->
+            val host = snapshot.getValue(String::class.java)
+            Log.d("RoomActivity", "Nickname: $nickname, Host: $host")  // Debug log
+
+            if (nickname == host) {
+                startSwipingButton.visibility = Button.VISIBLE
+                Log.d("RoomActivity", "Button should be visible for the host.")
+            } else {
+                startSwipingButton.visibility = Button.GONE
+                Log.d("RoomActivity", "Button is hidden for non-host.")
+            }
+        }
+
+    }
+
+    private fun listenForRoomStatus(roomCode: String) {
+        roomStatusListener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val status = snapshot.getValue(String::class.java)
+                if (status == "closed") {
+                    val intent = Intent(this@RoomActivity, MainActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                    finish()
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                showToast("Failed to check room status.")
+            }
+        }
+
+        // Attach the listener to the database reference
+        db.child("rooms").child(roomCode).child("status")
+            .addValueEventListener(roomStatusListener)
+    }
+
     private fun copyToClipboard(label: String, text: String) {
         val clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText(label, text)
@@ -183,7 +221,4 @@ class RoomActivity : AppCompatActivity() {
         // Remove the room node from Firebase
         db.child("rooms").child(roomCode).removeValue()
     }
-
-
 }
-
