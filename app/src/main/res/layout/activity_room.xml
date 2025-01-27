@@ -156,17 +156,16 @@
             <Button
                 android:id="@+id/startSwiping"
                 android:layout_width="200dp"
-                android:layout_height="60dp"
+                android:layout_height="70dp"
                 android:layout_marginBottom="15dp"
-                android:background="@drawable/host_a_session"
-                android:backgroundTint="@null"
+                style="@style/CustomButton"
                 android:fontFamily="@font/nats"
                 android:text="Start Swiping"
                 android:textAlignment="center"
                 android:textAllCaps="false"
                 android:textColor="@color/white"
                 android:textSize="18sp"
-                app:cornerRadius="15dp"
+                android:letterSpacing="-0.001"
                 tools:ignore="HardcodedText,TextSizeCheck,TextContrastCheck" />
         </LinearLayout>
 
