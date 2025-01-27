@@ -7,6 +7,10 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
@@ -42,6 +46,23 @@ class RoomActivity : AppCompatActivity() {
             insets
         }
 
+        // Genre Selection
+        val items = listOf("Horror", "Comedy", "Romance", "Drama", "Random")
+        val autoComplete: AutoCompleteTextView = findViewById(R.id.auto_complete)
+        val autoCompleteLayout: View = autoComplete.parent as View // Get the layout container
+        val adapter = ArrayAdapter(this, R.layout.list_item, items)
+        autoComplete.setAdapter(adapter)
+
+        autoComplete.onItemClickListener =
+            AdapterView.OnItemClickListener { adapterView, _, i, _ ->
+                val itemSelected = adapterView.getItemAtPosition(i)
+                updateGenreInFirebase(itemSelected.toString())
+                Toast.makeText(this, "Genre: $itemSelected", Toast.LENGTH_SHORT).show()
+            }
+
+        // Selected Genre TextView
+        val selectedGenreTextView: TextView = findViewById(R.id.selected_genre)
+
         // Initialize UI elements
         val codeButton: Button = findViewById(R.id.codeButton)
         val startSwipingButton: Button = findViewById(R.id.startSwiping)
@@ -50,7 +71,9 @@ class RoomActivity : AppCompatActivity() {
         membersTextView = findViewById(R.id.members)
 
         // Set initial button visibility for the host
-        startSwipingButton.visibility = Button.GONE // Hidden initially
+        startSwipingButton.visibility = Button.GONE
+        autoCompleteLayout.visibility = View.GONE
+        selectedGenreTextView.visibility = View.GONE
 
         // Initialize Firebase Database reference
         db = FirebaseDatabase.getInstance().reference
@@ -65,8 +88,8 @@ class RoomActivity : AppCompatActivity() {
         // Listen for member updates in the room
         listenForMemberUpdates(roomCode)
 
-        // Check if current user is the host and show button accordingly
-        checkIfHost(roomCode, nickname, startSwipingButton)
+        // Check if current user is the host and show buttons accordingly
+        checkIfHost(roomCode, nickname, startSwipingButton, autoCompleteLayout, selectedGenreTextView)
 
         // Handle start swiping button click
         startSwipingButton.setOnClickListener {
@@ -87,47 +110,45 @@ class RoomActivity : AppCompatActivity() {
             val host = snapshot.getValue(String::class.java)
 
             if (nickname == host) {
-                // If the nickname is the host, delete the entire room
                 db.child("rooms").child(roomCode).child("status").removeEventListener(roomStatusListener)
                 db.child("rooms").child(roomCode).child("status").setValue("closed")
                     .addOnCompleteListener {
                         deleteRoom()
                     }
             } else {
-                // If the nickname is not the host, remove the user from the room's members list
                 db.child("rooms").child(roomCode).child("members").child(nickname).removeValue()
                     .addOnCompleteListener {
-                        // You can add additional logic here if needed after removing the member
                         showToast("$nickname left the room")
                     }
             }
         }
     }
 
+    private fun updateGenreInFirebase(genre: String) {
+        val roomCode = intent.getStringExtra("roomCode") ?: return
+        db.child("rooms").child(roomCode).child("genre").setValue(genre)
+    }
+
     private fun generateQRAsPNG(roomCode: String) {
         try {
-            // Generate QR Code bitmap
             val writer = QRCodeWriter()
             val bitMatrix = writer.encode(roomCode, BarcodeFormat.QR_CODE, 500, 500)
             val width = bitMatrix.width
             val height = bitMatrix.height
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888) // ARGB_8888 supports transparency
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
 
             for (x in 0 until width) {
                 for (y in 0 until height) {
-                    // Set the pixel color: Transparent for black, White for QR code
                     bitmap.setPixel(x, y, if (bitMatrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
                 }
             }
 
-            // Save the bitmap as a PNG file
             val file = File(this.filesDir, "QRCode_$roomCode.png")
             val outputStream = FileOutputStream(file)
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
             outputStream.flush()
             outputStream.close()
 
-            // Display the saved QR Code in the ImageView
             val qrCodeImageView: ImageView = findViewById(R.id.qrCode)
             qrCodeImageView.setImageBitmap(bitmap)
 
@@ -148,34 +169,40 @@ class RoomActivity : AppCompatActivity() {
                             membersList.add(it)
                             if (it !in previousMembers) {
                                 previousMembers.add(it)
-                                // Show a toast when a new member joins
                                 showToast("$it Joined")
                             }
                         }
                     }
 
-                    // Update TextView with the member names only
                     val membersText = membersList.joinToString("\n")
                     membersTextView.text = membersText
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@RoomActivity, "Failed to load members.", Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(this@RoomActivity, "Failed to load members.", Toast.LENGTH_SHORT).show()
                 }
             })
     }
 
-    private fun checkIfHost(roomCode: String, nickname: String, startSwipingButton: Button) {
+    private fun checkIfHost(
+        roomCode: String,
+        nickname: String,
+        startSwipingButton: Button,
+        autoCompleteLayout: View,
+        selectedGenreTextView: TextView
+    ) {
         db.child("rooms").child(roomCode).child("host").get().addOnSuccessListener { snapshot ->
             val host = snapshot.getValue(String::class.java)
             if (nickname == host) {
-                startSwipingButton.visibility = Button.VISIBLE
+                startSwipingButton.visibility = View.VISIBLE
+                autoCompleteLayout.visibility = View.VISIBLE
+                selectedGenreTextView.visibility = View.GONE
             } else {
-                startSwipingButton.visibility = Button.GONE
+                startSwipingButton.visibility = View.GONE
+                autoCompleteLayout.visibility = View.GONE
+                selectedGenreTextView.visibility = View.VISIBLE
             }
         }
-
     }
 
     private fun listenForRoomStatus(roomCode: String) {
@@ -195,9 +222,7 @@ class RoomActivity : AppCompatActivity() {
             }
         }
 
-        // Attach the listener to the database reference
-        db.child("rooms").child(roomCode).child("status")
-            .addValueEventListener(roomStatusListener)
+        db.child("rooms").child(roomCode).child("status").addValueEventListener(roomStatusListener)
     }
 
     private fun copyToClipboard(label: String, text: String) {
@@ -213,7 +238,6 @@ class RoomActivity : AppCompatActivity() {
 
     private fun deleteRoom() {
         val roomCode = intent.getStringExtra("roomCode") ?: return
-        // Remove the room node from Firebase
         db.child("rooms").child(roomCode).removeValue()
     }
 }

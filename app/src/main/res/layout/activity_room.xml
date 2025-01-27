@@ -27,10 +27,11 @@
                 android:layout_height="60dp"
                 android:padding="16dp"
                 android:scaleType="centerCrop"
-                app:srcCompat="@drawable/logo" />
+                app:srcCompat="@drawable/logo"
+                tools:ignore="ContentDescription" />
 
             <View
-                android:layout_width="72dp"
+                android:layout_width="0dp"
                 android:layout_height="60dp"
                 android:layout_weight="1" />
 
@@ -42,20 +43,21 @@
                 android:padding="24dp"
                 android:scaleType="centerCrop"
                 app:srcCompat="@drawable/info_icon"
-                tools:ignore="SpeakableTextPresentCheck" />
+                tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:gravity="center">
+            android:gravity="center_horizontal">
 
             <ImageView
                 android:id="@+id/qrCode"
                 android:layout_width="match_parent"
                 android:layout_height="150dp"
-                app:srcCompat="@drawable/qr_png" />
+                app:srcCompat="@drawable/qr_png"
+                tools:ignore="ContentDescription" />
 
             <TextView
                 android:id="@+id/CopyCode"
@@ -63,7 +65,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:fontFamily="@font/nats"
-                android:text="Scan QR or Copy Code"
+                android:text="@string/scan_qr_or_copy_code"
                 android:textAlignment="center"
                 android:textColor="@color/white"
                 android:textSize="18sp" />
@@ -80,15 +82,42 @@
                 android:padding="8dp"
                 android:text="420690"
                 android:textColor="@color/white"
-                android:textSize="18sp" />
+                android:textSize="16sp"
+                tools:ignore="HardcodedText,RtlHardcoded" />
+
+
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingRight="36dp"
+                android:paddingLeft="36dp"
+                android:layout_margin="16dp"
+                android:hint="@string/genre_list"
+                app:startIconDrawable="@drawable/outline_movie_24"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
+
+                <AutoCompleteTextView
+                    android:id="@+id/auto_complete"
+                    android:layout_weight="1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="12dp"
+                    android:textSize="16sp"
+                    android:fontFamily="@font/nats"
+                    android:inputType="none"
+                    android:text="Select Genre"
+                    android:textColor="@color/white"
+                    tools:ignore="TextContrastCheck,VisualLintTextFieldSize,SpeakableTextPresentCheck" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <TextView
-                android:id="@+id/selectGenre"
+                android:id="@+id/selected_genre"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:fontFamily="@font/nats"
-                android:text="Select Genre: "
+                android:text="Selected Genre:"
                 android:textAlignment="center"
                 android:textColor="@color/white"
                 android:textSize="20sp"
@@ -100,7 +129,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:fontFamily="@font/nats"
-                android:text="Members: "
+                android:text="@string/members"
                 android:textAlignment="center"
                 android:textColor="@color/white"
                 android:textSize="20sp"
@@ -117,11 +146,11 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/nats"
                     android:lineSpacingMultiplier="0.5"
-                    android:text="@string/members"
+                    android:text="Members:"
                     android:textAlignment="center"
                     android:textColor="@color/white"
                     android:textSize="18sp"
-                    tools:ignore="DuplicateIds" />
+                    tools:ignore="DuplicateIds,HardcodedText" />
             </ScrollView>
 
             <Button
@@ -136,9 +165,9 @@
                 android:textAlignment="center"
                 android:textAllCaps="false"
                 android:textColor="@color/white"
-                android:textSize="22sp"
+                android:textSize="18sp"
                 app:cornerRadius="15dp"
-                tools:ignore="TextSizeCheck" />
+                tools:ignore="HardcodedText,TextSizeCheck,TextContrastCheck" />
         </LinearLayout>
 
     </LinearLayout>
