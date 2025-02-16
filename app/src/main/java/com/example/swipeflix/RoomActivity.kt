@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -19,6 +20,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.chaquo.python.Python
 import com.google.firebase.database.*
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
@@ -32,6 +34,7 @@ class RoomActivity : AppCompatActivity() {
     private lateinit var membersTextView: TextView
     private lateinit var roomStatusListener: ValueEventListener
     private var previousMembers = mutableSetOf<String>()
+    private var movie_data: MutableList<Pair<String, String>> = mutableListOf()
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,7 +50,7 @@ class RoomActivity : AppCompatActivity() {
         }
 
         // Genre Selection
-        val items = listOf("Horror", "Comedy", "Romance", "Drama", "Random")
+        val items = listOf("Anime", "Action & adventure films", "Action Sci-Fi and Fantasy", "Comedies", "Dramas", "Documentaries", "Indian movies", "Horror movies", "Mysteries", "Reality TV", "TV Dramas")
         val autoComplete: AutoCompleteTextView = findViewById(R.id.auto_complete)
         val autoCompleteLayout: View = autoComplete.parent as View // Get the layout container
         val adapter = ArrayAdapter(this, R.layout.list_item, items)
@@ -127,6 +130,10 @@ class RoomActivity : AppCompatActivity() {
     private fun updateGenreInFirebase(genre: String) {
         val roomCode = intent.getStringExtra("roomCode") ?: return
         db.child("rooms").child(roomCode).child("genre").setValue(genre)
+        val py= Python.getInstance()
+        val pyModule= py.getModule("scraping")
+        val result= pyModule.call()
+        Log.d("Python res: ", result.toString())
     }
 
     private fun generateQRAsPNG(roomCode: String) {

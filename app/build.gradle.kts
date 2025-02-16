@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.gms.google-services")
+    id("com.chaquo.python")
 }
 
 android {
@@ -16,6 +17,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters += listOf("arm64-v8a", "x86_64", "x86")
+        }
     }
 
     buildTypes {
@@ -40,6 +44,11 @@ android {
     buildFeatures {
         viewBinding = true
     }
+}
+chaquopy {
+    defaultConfig { }
+    productFlavors { }
+    sourceSets { }
 }
 
 dependencies {
