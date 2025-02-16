@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.gms.google-services")
-    id("com.chaquo.python")
 }
 
 android {
@@ -44,11 +43,6 @@ android {
     buildFeatures {
         viewBinding = true
     }
-}
-chaquopy {
-    defaultConfig { }
-    productFlavors { }
-    sourceSets { }
 }
 
 dependencies {

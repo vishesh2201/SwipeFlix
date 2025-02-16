@@ -20,7 +20,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.chaquo.python.Python
 import com.google.firebase.database.*
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
@@ -34,7 +33,6 @@ class RoomActivity : AppCompatActivity() {
     private lateinit var membersTextView: TextView
     private lateinit var roomStatusListener: ValueEventListener
     private var previousMembers = mutableSetOf<String>()
-    private var movie_data: MutableList<Pair<String, String>> = mutableListOf()
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -130,10 +128,6 @@ class RoomActivity : AppCompatActivity() {
     private fun updateGenreInFirebase(genre: String) {
         val roomCode = intent.getStringExtra("roomCode") ?: return
         db.child("rooms").child(roomCode).child("genre").setValue(genre)
-        val py= Python.getInstance()
-        val pyModule= py.getModule("scraping")
-        val result= pyModule.call()
-        Log.d("Python res: ", result.toString())
     }
 
     private fun generateQRAsPNG(roomCode: String) {
