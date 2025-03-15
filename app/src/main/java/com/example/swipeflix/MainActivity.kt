@@ -15,6 +15,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.chaquo.python.Python
+import com.chaquo.python.android.AndroidPlatform
 import com.google.firebase.database.FirebaseDatabase
 import com.google.zxing.integration.android.IntentIntegrator
 import com.journeyapps.barcodescanner.CaptureActivity
@@ -29,6 +31,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+        if (! Python.isStarted()) {
+            Python.start( AndroidPlatform(this))
+        }
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -48,7 +53,7 @@ class MainActivity : AppCompatActivity() {
         hostSessionButton.setOnClickListener {
             var nickname = nicknameEditText.text.toString().trim() // Use var instead of val
 
-            if (nickname.length > 2) {
+            if (nickname.length > 1) {
                 // Capitalize the first letter and make the rest lowercase
                 nickname = nickname.replaceFirstChar { it.uppercase() }
 
@@ -66,7 +71,7 @@ class MainActivity : AppCompatActivity() {
         joinSessionButton.setOnClickListener {
             var nickname = nicknameEditText.text.toString().trim() // Use var instead of val
 
-            if (nickname.length <= 2) {
+            if (nickname.length < 2) {
                 Toast.makeText(this, "Enter Nickname", Toast.LENGTH_SHORT).show()
             } else {
                 // Capitalize the first letter and make the rest lowercase

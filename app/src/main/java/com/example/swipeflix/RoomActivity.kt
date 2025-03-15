@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -47,7 +48,7 @@ class RoomActivity : AppCompatActivity() {
         }
 
         // Genre Selection
-        val items = listOf("Horror", "Comedy", "Romance", "Drama", "Random")
+        val items = listOf("Anime", "Action & adventure films", "Action Sci-Fi and Fantasy", "Comedies", "Dramas", "Documentaries", "Indian movies", "Horror movies", "Mysteries", "Reality TV", "TV Dramas")
         val autoComplete: AutoCompleteTextView = findViewById(R.id.auto_complete)
         val autoCompleteLayout: View = autoComplete.parent as View // Get the layout container
         val adapter = ArrayAdapter(this, R.layout.list_item, items)
