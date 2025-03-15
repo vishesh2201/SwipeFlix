@@ -51,6 +51,19 @@
         android:orientation="vertical"
         android:padding="32dp">
 
+        <TextView
+            android:id="@+id/keepswiping"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:fontFamily="@font/nats"
+            android:gravity="center"
+            android:text="Keep Swiping!"
+            android:textColor="@android:color/white"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            tools:ignore="HardcodedText" />
+
         <LinearLayout
             android:id="@+id/movie_card"
             android:layout_width="match_parent"
@@ -90,12 +103,90 @@
                 android:layout_marginTop="8dp"
                 android:fontFamily="@font/nats"
                 android:gravity="center"
-                android:text="Movie Title"
+                android:letterSpacing="0.05"
+                android:text="Interstellar"
                 android:textColor="@android:color/white"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 tools:ignore="HardcodedText" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="-20dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="horizontal"
+                tools:ignore="InefficientWeight">
+
+                <TextView
+                    android:id="@+id/releasedate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/nats"
+                    android:gravity="center"
+                    android:letterSpacing="0.05"
+                    android:text="2014"
+                    android:textColor="#7e7e7e"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    tools:ignore="HardcodedText,VisualLintBounds" />
+
+                <TextView
+                    android:id="@+id/runtime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="@font/nats"
+                    android:gravity="center"
+                    android:letterSpacing="0.05"
+                    android:text="2h 49m"
+                    android:textColor="#7e7e7e"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    tools:ignore="HardcodedText,VisualLintBounds" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/bot_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:layout_marginTop="32dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageButton
+                android:id="@+id/thumbsdown"
+                android:layout_width="72dp"
+                android:layout_height="60dp"
+                android:background="#00000000"
+                android:padding="16dp"
+                android:scaleType="centerCrop"
+                app:srcCompat="@drawable/thumbsdown"
+                tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1" />
+
+            <ImageButton
+                android:id="@+id/thumbsup"
+                android:layout_width="72dp"
+                android:layout_height="60dp"
+                android:background="#00000000"
+                android:padding="16dp"
+                android:scaleType="centerCrop"
+                app:srcCompat="@drawable/thumbsup"
+                tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
         </LinearLayout>
     </LinearLayout>
 

@@ -53,10 +53,10 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
 
     // Material Components for SwipeView and CardView
-    implementation("com.google.android.material:material:1.9.0")
+    implementation(libs.material)
 
     // RecyclerView for creating card stacks
-    implementation("androidx.recyclerview:recyclerview:1.3.1")
+    implementation(libs.androidx.recyclerview)
 
 
     // ZXing (QR Code Scanner)
@@ -78,7 +78,7 @@ dependencies {
 
 
     implementation(libs.androidx.core.ktx)
-    implementation ("com.google.zxing:core:3.5.2")
+    implementation (libs.core)
 
     implementation(platform(libs.firebase.bom))
 
