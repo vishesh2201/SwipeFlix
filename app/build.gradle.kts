@@ -55,34 +55,19 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
 
-    // Material Components for SwipeView and CardView
-    implementation(libs.material)
-
-    // RecyclerView for creating card stacks
+    // RecyclerView for card stacks
     implementation(libs.androidx.recyclerview)
-
 
     // ZXing (QR Code Scanner)
     implementation(libs.zxing.android.embedded)
 
-    // Backward compatibility (AppCompat v1.6.1)
-    implementation(libs.androidx.appcompat.v161)
-    implementation(libs.firebase.firestore)
-    implementation(libs.firebase.auth.ktx)
-    implementation(libs.firebase.common.ktx)
+    // Firebase (only what you need)
+    implementation(platform(libs.firebase.bom))
     implementation(libs.google.firebase.database.ktx)
 
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
-    implementation(libs.firebase.database)
-
-
-    implementation(libs.androidx.core.ktx)
-    implementation (libs.core)
-
-    implementation(platform(libs.firebase.bom))
-
 }
+

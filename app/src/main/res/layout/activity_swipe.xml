@@ -8,6 +8,7 @@
     android:background="@drawable/background"
     tools:context=".SwipeActivity">
 
+    <!-- Top Bar -->
     <LinearLayout
         android:id="@+id/top_bar"
         android:layout_width="match_parent"
@@ -43,6 +44,7 @@
             tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
     </LinearLayout>
 
+    <!-- Main Content -->
     <LinearLayout
         android:id="@+id/linearLayout"
         android:layout_width="match_parent"
@@ -64,94 +66,173 @@
             android:textStyle="bold"
             tools:ignore="HardcodedText" />
 
-        <LinearLayout
+        <!-- 🔄 UPDATED MOVIE CARD -->
+        <FrameLayout
             android:id="@+id/movie_card"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="525dp"
+
             android:background="@drawable/movie_card_bg"
-            android:orientation="vertical"
-            android:padding="16dp"
-            tools:ignore="UselessParent">
+            android:padding="16dp">
 
-            <!-- ConstraintLayout to maintain aspect ratio for the Movie Poster -->
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-
-                <!-- Movie Poster -->
-                <ImageView
-                    android:id="@+id/moviePoster"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:contentDescription="Movie Poster"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/img_2"
-                    app:layout_constraintDimensionRatio="3:4"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    tools:ignore="HardcodedText,VisualLintBounds" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <!-- Movie Title -->
-            <TextView
-                android:id="@+id/movieTitle"
+            <!-- FRONT SIDE -->
+            <LinearLayout
+                android:id="@+id/cardFront"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:fontFamily="@font/nats"
-                android:gravity="center"
-                android:letterSpacing="0.05"
-                android:text="Interstellar"
-                android:textColor="@android:color/white"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                tools:ignore="HardcodedText" />
+                android:orientation="vertical"
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="-20dp"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="horizontal"
-                tools:ignore="InefficientWeight">
+                >
 
-                <TextView
-                    android:id="@+id/releasedate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginEnd="16dp"
-                    android:fontFamily="@font/nats"
-                    android:gravity="center"
-                    android:letterSpacing="0.05"
-                    android:text="2014"
-                    android:textColor="#7e7e7e"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    tools:ignore="HardcodedText,VisualLintBounds" />
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <ImageView
+                        android:id="@+id/moviePoster"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:contentDescription="Movie Poster"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/img_2"
+                        app:layout_constraintDimensionRatio="3:4"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:ignore="HardcodedText,VisualLintBounds" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <TextView
-                    android:id="@+id/runtime"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/movieTitle"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:fontFamily="@font/nats"
                     android:gravity="center"
-                    android:letterSpacing="0.05"
-                    android:text="2h 49m"
-                    android:textColor="#7e7e7e"
-                    android:textSize="16sp"
+                    android:text="Interstellar"
+                    android:textColor="@android:color/white"
+                    android:textSize="20sp"
                     android:textStyle="bold"
-                    tools:ignore="HardcodedText,VisualLintBounds" />
+                    tools:ignore="HardcodedText" />
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="-20dp"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/releasedateback"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="16dp"
+                        android:fontFamily="@font/nats"
+                        android:gravity="center"
+                        android:text="2014"
+                        android:textColor="#7e7e7e"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        tools:ignore="HardcodedText" />
+
+                    <TextView
+                        android:id="@+id/runtime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/nats"
+                        android:gravity="center"
+                        android:text="2h 49m"
+                        android:textColor="#7e7e7e"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        tools:ignore="HardcodedText" />
+                </LinearLayout>
             </LinearLayout>
 
-        </LinearLayout>
+            <!-- BACK SIDE -->
+            <LinearLayout
+                android:id="@+id/cardBack"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                >
 
+                <!-- Spacer to push content down -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/movieDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="An epic sci-fi where explorers travel through a wormhole in search of a new home for humanity."
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"
+                    android:fontFamily="@font/nats"
+                    android:padding="8dp"
+                    android:gravity="center"
+                    android:lineSpacingExtra="4dp" />
+
+
+                <!-- Spacer to push title/details down -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/movieTitleBack"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="@font/nats"
+                    android:gravity="center"
+                    android:text="Interstellar"
+                    android:textColor="@android:color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    tools:ignore="HardcodedText" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="-20dp"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/releasedateBack"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="16dp"
+                        android:fontFamily="@font/nats"
+                        android:gravity="center"
+                        android:text="2014"
+                        android:textColor="#7e7e7e"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+
+                        tools:ignore="HardcodedText" />
+
+                    <TextView
+                        android:id="@+id/runtimeBack"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/nats"
+                        android:gravity="center"
+                        android:text="2h 49m"
+                        android:textColor="#7e7e7e"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        tools:ignore="HardcodedText" />
+                </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Bottom Bar -->
         <LinearLayout
             android:id="@+id/bot_bar"
             android:layout_width="match_parent"
@@ -173,6 +254,13 @@
                 app:srcCompat="@drawable/thumbsdown"
                 tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
 
+            <Button
+                android:id="@+id/flipButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Flip" />
+
             <View
                 android:layout_width="0dp"
                 android:layout_height="60dp"
@@ -189,6 +277,4 @@
                 tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
         </LinearLayout>
     </LinearLayout>
-
-
 </androidx.constraintlayout.widget.ConstraintLayout>
