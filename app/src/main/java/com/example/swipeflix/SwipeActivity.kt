@@ -5,9 +5,7 @@ import android.animation.AnimatorSet
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
-import android.widget.Button
 import android.widget.FrameLayout
-import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -16,67 +14,63 @@ import androidx.core.view.WindowInsetsCompat
 
 class SwipeActivity : AppCompatActivity() {
 
-    private lateinit var movieImage: ImageView
+    private lateinit var movieCard: FrameLayout
+    private lateinit var cardFront: LinearLayout
+    private lateinit var cardBack: LinearLayout
+    private var isFrontVisible = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_swipe)
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-        val cardFront = findViewById<LinearLayout>(R.id.cardFront)
-        val cardBack = findViewById<LinearLayout>(R.id.cardBack)
-        val flipButton = findViewById<Button>(R.id.flipButton)
-        movieImage = findViewById(R.id.moviePoster)
-        val movieCard = findViewById<FrameLayout>(R.id.movie_card)
+        movieCard = findViewById(R.id.movie_card)
+        cardFront = findViewById(R.id.cardFront)
+        cardBack = findViewById(R.id.cardBack)
 
+        // Set camera distance to fix perspective distortion
+        val scale = resources.displayMetrics.density
+        movieCard.cameraDistance = 8000 * scale
 
+        // ✅ Initialize the visibility properly to prevent first-click glitch
+        cardFront.visibility = View.VISIBLE
+        cardBack.visibility = View.GONE
 
-        var isFrontVisible = true
-
-
-        flipButton.setOnClickListener{
-            val frontAnim = AnimatorInflater.loadAnimator(this, R.animator.front_flip) as AnimatorSet
-            val backAnim = AnimatorInflater.loadAnimator(this, R.animator.back_flip) as AnimatorSet
-
-            if (isFrontVisible) {
-                frontAnim.setTarget(movieCard)
-                backAnim.setTarget(movieCard)
-
-                frontAnim.interpolator = AccelerateDecelerateInterpolator()
-                backAnim.interpolator = AccelerateDecelerateInterpolator()
-
-                frontAnim.start()
-                frontAnim.addListener(object : android.animation.AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: android.animation.Animator) {
-                        cardFront.visibility = View.GONE
-                        cardBack.visibility = View.VISIBLE
-                        backAnim.start()
-                    }
-                })
-            } else {
-                frontAnim.setTarget(movieCard)
-                backAnim.setTarget(movieCard)
-
-                frontAnim.interpolator = AccelerateDecelerateInterpolator()
-                backAnim.interpolator = AccelerateDecelerateInterpolator()
-
-                frontAnim.start()
-                frontAnim.addListener(object : android.animation.AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: android.animation.Animator) {
-                        cardFront.visibility = View.VISIBLE
-                        cardBack.visibility = View.GONE
-                        backAnim.start()
-                    }
-                })
-            }
-            isFrontVisible = !isFrontVisible
-
+        // Flip on card click
+        movieCard.setOnClickListener {
+            flipCard()
         }
     }
 
+    private fun flipCard() {
+        // Ensure pivot is set before flipping
+        movieCard.pivotX = movieCard.width / 2f
+        movieCard.pivotY = movieCard.height / 2f
+
+        val firstHalf = AnimatorInflater.loadAnimator(this, R.animator.front_flip) as AnimatorSet
+        val secondHalf = AnimatorInflater.loadAnimator(this, R.animator.back_flip) as AnimatorSet
+
+        firstHalf.setTarget(movieCard)
+        firstHalf.interpolator = AccelerateDecelerateInterpolator()
+
+        secondHalf.setTarget(movieCard)
+        secondHalf.interpolator = AccelerateDecelerateInterpolator()
+
+        firstHalf.addListener(object : android.animation.AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: android.animation.Animator) {
+                if (isFrontVisible) {
+                    cardFront.visibility = View.GONE
+                    cardBack.visibility = View.VISIBLE
+                } else {
+                    cardFront.visibility = View.VISIBLE
+                    cardBack.visibility = View.GONE
+                }
+                secondHalf.start()
+                isFrontVisible = !isFrontVisible
+            }
+        })
+
+        firstHalf.start()
+
+    }
 }

@@ -69,7 +69,7 @@
         <!-- 🔄 UPDATED MOVIE CARD -->
         <FrameLayout
             android:id="@+id/movie_card"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="525dp"
 
             android:background="@drawable/movie_card_bg"
@@ -78,7 +78,7 @@
             <!-- FRONT SIDE -->
             <LinearLayout
                 android:id="@+id/cardFront"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
 
@@ -90,7 +90,7 @@
 
                     <ImageView
                         android:id="@+id/moviePoster"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:contentDescription="Movie Poster"
                         android:scaleType="centerCrop"
@@ -152,7 +152,7 @@
             <!-- BACK SIDE -->
             <LinearLayout
                 android:id="@+id/cardBack"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:visibility="gone"
@@ -254,12 +254,7 @@
                 app:srcCompat="@drawable/thumbsdown"
                 tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
 
-            <Button
-                android:id="@+id/flipButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Flip" />
+            
 
             <View
                 android:layout_width="0dp"
