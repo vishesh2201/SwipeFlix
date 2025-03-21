@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-03-20T07:28:39.932256400Z">
+        <DropdownSelection timestamp="2025-03-21T09:23:04.790052800Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Vishesh\.android\avd\Main_Phone_Goggle_Pixel_6_poro.avd" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=RFCT41SCMGB" />
             </handle>
           </Target>
         </DropdownSelection>

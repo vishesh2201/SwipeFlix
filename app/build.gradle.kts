@@ -64,6 +64,11 @@ dependencies {
     // Firebase (only what you need)
     implementation(platform(libs.firebase.bom))
     implementation(libs.google.firebase.database.ktx)
+    implementation(libs.ktor.client.engine.z)
+
+    //supabase
+//    implementation(libs.bom)
+    implementation(libs.xpostgrest.kt.z)
 
     // Testing
     testImplementation(libs.junit)
