@@ -31,6 +31,8 @@ import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class MainActivity : AppCompatActivity() {
     private lateinit var supabase: SupabaseClient
@@ -80,12 +82,11 @@ class MainActivity : AppCompatActivity() {
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
                         val userid= createUser(formattedNickname, roomCode)
-                        Log.e("Supabase","User id returned from the users tbale on supabase: ${userid}")
+                        Log.e("Supabase","User id returned from the users table on supabase: ${userid}")
                         delay(500)
                         if (userid != null) {
-                            createRoom(roomCode, userid)
-                        }  // Create Room First
-//                        addUserToRoom(formattedNickname, roomCode, isLeader = true) // Then Add User
+                            val population= createRoom(roomCode, userid)
+                        } // Create Room First
                         withContext(Dispatchers.Main) {
                             Toast.makeText(applicationContext, "Hosting session as $formattedNickname!", Toast.LENGTH_SHORT).show()
                             val intent = Intent(this@MainActivity, RoomActivity::class.java)
@@ -118,7 +119,7 @@ class MainActivity : AppCompatActivity() {
                     CoroutineScope(Dispatchers.IO).launch {
                         val roomId = enteredCode
                         if (roomId != null) {
-                            addUserToRoom(formattedNickname, roomId, isLeader = false)
+                            addUserToRoom(formattedNickname, roomId)
                             withContext(Dispatchers.Main) {
                                 val intent = Intent(this@MainActivity, RoomActivity::class.java)
                                 intent.putExtra("roomCode", enteredCode)
@@ -147,26 +148,35 @@ class MainActivity : AppCompatActivity() {
             .decodeSingle<Map<String, String>>()["userid"]
     }
     // Create a new room in the rooms table
-    private suspend fun createRoom(roomCode: String, leaderUserid: String) {
+    private suspend fun createRoom(roomCode: String, leaderUserid: String): String? {
+        Log.e("FuncCall", "Inside createRoom function with roomCode: $roomCode, leaderUserid: $leaderUserid")
         try {
-            val record= mapOf("roomid" to roomCode,"population" to 1,  "leader_user_id" to leaderUserid, "is_active" to true)
-            val response = supabase.from("rooms").insert(record) { select() }
-            Log.d("Supabase", "Room insert response: $response")
+            // Create a data object directly as a map
+            val roomData = mapOf(
+                "roomid" to roomCode,
+                "population" to "1",
+                "leader_user_id" to leaderUserid,
+                "is_active" to "true",
+                "genre" to "Anime"
+            )
 
-
-            Log.d("Supabase", "Room created successfully: $roomCode")
-//            true
+            // Insert the data directly
+            return supabase.from("rooms").insert(roomData){select()}.decodeSingle<Map<String, String>>()["population"]
         } catch (e: Exception) {
-            e.printStackTrace()
-//            false
+            Log.e("Supabase", "Error inserting into rooms table: ${e.message}")
+            return "0"
         }
     }
 
+
+
+
+
     // Add a user to the users table and associate with a room
-    private suspend fun addUserToRoom(nickname: String, roomId: String, isLeader: Boolean) {
+    private suspend fun addUserToRoom(nickname: String, roomId: String) {
         try {
             supabase.from("users").insert(
-                mapOf("nickname" to nickname, "room_id" to roomId, "is_leader" to isLeader)
+                mapOf("nickname" to nickname, "room_id" to roomId)
             )
         } catch (e: Exception) {
             e.printStackTrace()
