@@ -3,11 +3,11 @@
   <component name="deploymentTargetSelector">
     <selectionStates>
       <SelectionState runConfigName="app">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-03-21T09:23:04.790052800Z">
+        <option name="selectionMode" value="DIALOG" />
+        <DropdownSelection timestamp="2025-04-05T10:55:25.084648900Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=RFCT41SCMGB" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=41090DLJH0008E" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -18,8 +18,16 @@
                 <DeviceId pluginId="PhysicalDevice" identifier="serial=41090DLJH0008E" />
               </handle>
             </Target>
+            <Target type="DEFAULT_BOOT">
+              <handle>
+                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\iamar\.android\avd\Pixel_8_API_34_2.avd" />
+              </handle>
+            </Target>
           </targets>
         </DialogSelection>
+      </SelectionState>
+      <SelectionState runConfigName="SwipeActivity">
+        <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>
   </component>

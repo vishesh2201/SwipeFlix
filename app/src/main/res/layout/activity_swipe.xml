@@ -16,6 +16,7 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="16dp"
+        android:layout_marginTop="24dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -51,7 +52,9 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="vertical"
-        android:padding="32dp">
+        android:padding="32dp"
+        android:clipChildren="false"
+        android:clipToPadding="false">
 
         <TextView
             android:id="@+id/keepswiping"
@@ -71,7 +74,6 @@
             android:id="@+id/movie_card"
             android:layout_width="wrap_content"
             android:layout_height="525dp"
-
             android:background="@drawable/movie_card_bg"
             android:padding="16dp">
 
@@ -253,8 +255,6 @@
                 android:scaleType="centerCrop"
                 app:srcCompat="@drawable/thumbsdown"
                 tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
-
-            
 
             <View
                 android:layout_width="0dp"
