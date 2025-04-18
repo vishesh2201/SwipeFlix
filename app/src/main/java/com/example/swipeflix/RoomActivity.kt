@@ -1,11 +1,13 @@
 package com.example.swipeflix
 
+import org.json.JSONObject
 import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Movie
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -22,6 +24,9 @@ import io.github.jan.supabase.postgrest.Postgrest
 import java.io.File
 import java.io.FileOutputStream
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -33,17 +38,25 @@ class RoomActivity : AppCompatActivity() {
     private lateinit var membersTextView: TextView
     private var membersList = mutableSetOf<String>()
     private var isHost = false
-    val selectedGenreTextView: TextView = findViewById(R.id.selected_genre)
-    val codeButton: Button = findViewById(R.id.codeButton)
-    val startSwipingButton: Button = findViewById(R.id.startSwiping)
-    val nickname = intent.getStringExtra("nickname") ?: "Unknown"
-    val roomCode = intent.getStringExtra("roomCode") ?: "Unknown Room"
+    lateinit var selectedGenreTextView: TextView
+    lateinit var codeButton: Button
+    lateinit var startSwipingButton: Button
+    lateinit var nickname: String
+    lateinit var roomCode: String
+    lateinit var movies: List<Map<String, Any?>>
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_room)
+
+        selectedGenreTextView = findViewById(R.id.selected_genre)
+        codeButton = findViewById(R.id.codeButton)
+        startSwipingButton = findViewById(R.id.startSwiping)
+
+        nickname = intent.getStringExtra("nickname") ?: "Unknown"
+        roomCode = intent.getStringExtra("roomCode") ?: "Unknown Room"
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -54,10 +67,13 @@ class RoomActivity : AppCompatActivity() {
             supabaseUrl = "https://conuknnnccumnwejxxkc.supabase.co/",
             supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvbnVrbm5uY2N1bW53ZWp4eGtjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxMTY4NzksImV4cCI6MjA1NzY5Mjg3OX0.5I17QPKjv2-fNaBCiYx6sOcVF0zCi1Syc0Tcg6z75uk"
         ) {
+
             //...
+
             install(Postgrest) {
                 // settings
             }
+
         }
 
         val genres = listOf("Anime", "Action & adventure films", "Action Sci-Fi and Fantasy", "Comedies", "Dramas", "Documentaries", "Indian movies", "Horror movies", "Mysteries", "Reality TV", "TV Dramas")
@@ -98,6 +114,10 @@ class RoomActivity : AppCompatActivity() {
 
         startSwipingButton.setOnClickListener {
             callUpdateRoomGenre(roomCode, selectedGenre)
+//            CoroutineScope(Dispatchers.IO).launch {
+//                movies= fetchMoviesByGenre(selectedGenre)
+//                Log.e("Supabase", "Fetched movies: $movies")
+//            }
             val intent = Intent(this, SwipeActivity::class.java)
             startActivity(intent)
         }
@@ -167,12 +187,15 @@ class RoomActivity : AppCompatActivity() {
     // A suspend function to update the room genre
     private suspend fun addgenre(roomCode: String, genre: String) {
         try {
+            Log.e("Supabase", "Trying to update room with code: $roomCode")
             val response = supabase.from("rooms").update(
                 mapOf("genre" to genre)  // Set the genre to the provided genre
             ) {
+                select()
                 filter {
                     eq("roomid", roomCode)  // Filter by roomid
                 }
+
             }
 
             // Log the response

@@ -1,11 +1,14 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.swipeflix
 
+import kotlinx.coroutines.delay
+import android.util.Log
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.text.InputFilter
 import android.text.InputType
-import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
@@ -14,16 +17,20 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.postgrest.from
+import com.google.zxing.integration.android.IntentIntegrator
+import com.journeyapps.barcodescanner.CaptureActivity
+import io.github.jan.supabase.*
+import io.github.jan.supabase.postgrest.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.random.Random
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.postgrest.from
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 class MainActivity : AppCompatActivity() {
     private lateinit var supabase: SupabaseClient
@@ -33,7 +40,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -70,48 +76,31 @@ class MainActivity : AppCompatActivity() {
             if (nickname.length > 1) {
                 val formattedNickname = nickname.replaceFirstChar { it.uppercase() }
                 val roomCode = generateUniqueRoomCode()
-                Toast.makeText(this, "Nickname accepted. Creating user...", Toast.LENGTH_SHORT).show()
-                Log.d("HostSession", "Starting coroutine to create user with nickname: $formattedNickname and roomCode: $roomCode")
 
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        val userid = createUser(formattedNickname, roomCode)
-                        Log.d("HostSession", "UserID received from Supabase: $userid")
-
+                        val userid= createUser(formattedNickname, roomCode)
+                        Log.e("Supabase","User id returned from the users tbale on supabase: ${userid}")
                         delay(500)
-
                         if (userid != null) {
-                            val population = createRoom(roomCode, userid)
-                            Log.d("HostSession", "Room created with population: $population")
-
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(applicationContext, "Hosting session as $formattedNickname!", Toast.LENGTH_SHORT).show()
-                                Log.d("HostSession", "Navigating to RoomActivity")
-
-                                val intent = Intent(this@MainActivity, RoomActivity::class.java)
-                                intent.putExtra("roomCode", roomCode)
-                                intent.putExtra("nickname", formattedNickname)
-                                startActivity(intent)
-                            }
-                        } else {
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(applicationContext, "Failed to create user.", Toast.LENGTH_SHORT).show()
-                                Log.e("HostSession", "UserID is null. User creation failed.")
-                            }
+                            createRoom(roomCode, userid)
+                        }  // Create Room First
+//                        addUserToRoom(formattedNickname, roomCode, isLeader = true) // Then Add User
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(applicationContext, "Hosting session as $formattedNickname!", Toast.LENGTH_SHORT).show()
+                            val intent = Intent(this@MainActivity, RoomActivity::class.java)
+                            intent.putExtra("roomCode", roomCode)
+                            intent.putExtra("nickname", formattedNickname)
+                            startActivity(intent)
                         }
                     } catch (e: Exception) {
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(applicationContext, "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                            Log.e("HostSession", "Exception during hosting: ${e.message}")
-                        }
+                        Log.e("Supabase", "Error: ${e.message}")
                     }
                 }
             } else {
                 Toast.makeText(this, "Enter Nickname", Toast.LENGTH_SHORT).show()
-                Log.w("HostSession", "Nickname too short or empty")
             }
         }
-
 
 
         joinSessionButton.setOnClickListener {
@@ -127,8 +116,9 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "Enter Room Code", Toast.LENGTH_SHORT).show()
                 } else {
                     CoroutineScope(Dispatchers.IO).launch {
-                        if (enteredCode != null) {
-                            addUserToRoom(formattedNickname, enteredCode)
+                        val roomId = enteredCode
+                        if (roomId != null) {
+                            addUserToRoom(formattedNickname, roomId, isLeader = false)
                             withContext(Dispatchers.Main) {
                                 val intent = Intent(this@MainActivity, RoomActivity::class.java)
                                 intent.putExtra("roomCode", enteredCode)
@@ -137,11 +127,7 @@ class MainActivity : AppCompatActivity() {
                             }
                         } else {
                             withContext(Dispatchers.Main) {
-                                Toast.makeText(
-                                    applicationContext,
-                                    "Invalid Room Code",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                Toast.makeText(applicationContext, "Invalid Room Code", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
@@ -155,56 +141,38 @@ class MainActivity : AppCompatActivity() {
     }
 
     private suspend fun createUser(nickname: String, roomId: String): String? {
-        try {
-            val user = mapOf("nickname" to nickname, "room_id" to roomId)
-            Log.d("SupabaseDebug", "Trying to insert user: $user")
-
-            val response = supabase.from("users")
-                .insert(user) { select() }
-                .decodeSingle<Map<String, Any>>()
-
-            Log.d("SupabaseDebug", "Insert Response: $response")
-
-            val userId = response["userid"]?.toString()
-            Log.d("HostSession", "UserID received from Supabase: $userId")
-            return userId
-        } catch (e: Exception) {
-            Log.e("SupabaseDebug", "createUser() failed: ${e.message}")
-            return null
-        }
+        val user = mapOf("nickname" to nickname, "roomid" to roomId)
+        return supabase.from("users")
+            .insert(user){select()}
+            .decodeSingle<Map<String, String>>()["userid"]
     }
-
-
     // Create a new room in the rooms table
-    private suspend fun createRoom(roomCode: String, leaderUserid: String): String? {
-        Log.e("FuncCall", "Inside createRoom function with roomCode: $roomCode, leaderUserid: $leaderUserid")
+    private suspend fun createRoom(roomCode: String, leaderUserid: String) {
         try {
-            // Create a data object directly as a map
-            val roomData = mapOf(
-                "room_id" to roomCode,
+            val record = mapOf(
+                "roomid" to roomCode,
                 "population" to "1",
                 "leader_user_id" to leaderUserid,
-                "is_active" to "true",
-                "genre" to "Anime"
+                "is_active" to "true"
             )
-
-            // Insert the data directly
-            return supabase.from("rooms").insert(roomData){select()}.decodeSingle<Map<String, String>>()["population"]
+            val response = supabase.from("rooms").insert(record) { select() }
+            if (response.data != null) {
+                Log.e("Supabase", "Error creating room: ${response.data}")
+            } else {
+                Log.d("Supabase", "Room created successfully with code: $roomCode")
+            }
         } catch (e: Exception) {
-            Log.e("Supabase", "Error inserting into rooms table: ${e.message}")
-            return "0"
+            e.printStackTrace()
+            Log.e("Supabase", "Error inserting room: ${e.message}")
         }
     }
-
-
-
 
 
     // Add a user to the users table and associate with a room
-    private suspend fun addUserToRoom(nickname: String, roomId: String) {
+    private suspend fun addUserToRoom(nickname: String, roomId: String, isLeader: Boolean) {
         try {
             supabase.from("users").insert(
-                mapOf("nickname" to nickname, "room_id" to roomId)
+                mapOf("nickname" to nickname, "room_id" to roomId, "is_leader" to isLeader)
             )
         } catch (e: Exception) {
             e.printStackTrace()
