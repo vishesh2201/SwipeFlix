@@ -73,6 +73,7 @@ dependencies {
     //supabase
 //    implementation(libs.bom)
     implementation(libs.xpostgrest.kt.z)
+    implementation ("io.github.jan-tennert.supabase:realtime-kt:2.0.4")
 
     // Testing
     testImplementation(libs.junit)
@@ -80,6 +81,9 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3") // or latest
+
+    //Delay
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3") // Use the latest version
 
     implementation(libs.glide)
     kapt(libs.glide.compiler)

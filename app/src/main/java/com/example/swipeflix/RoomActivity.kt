@@ -2,7 +2,6 @@ package com.example.swipeflix
 
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import org.json.JSONObject
 import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -10,7 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
-import android.os.Parcelable
 import android.util.Log
 import android.view.View
 import android.widget.*
@@ -24,28 +22,27 @@ import com.google.zxing.qrcode.QRCodeWriter
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
-import java.io.File
-import java.io.FileOutputStream
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
-import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.parcelize.Parcelize
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import java.util.UUID
-import com.example.swipeflix.Movie
-
-
+import java.io.File
+import java.io.FileOutputStream
 
 class RoomActivity : AppCompatActivity() {
 
-
-
     @Serializable
     data class GenreParam(val selected_genre: String)
+
+    @Serializable
+    data class UserNickname(val nickname: String)
 
     private lateinit var supabase: SupabaseClient
     private lateinit var membersTextView: TextView
@@ -57,6 +54,7 @@ class RoomActivity : AppCompatActivity() {
     lateinit var nickname: String
     lateinit var roomCode: String
     lateinit var movies: List<Movie>
+    private lateinit var pollingJob: Job // To manage the polling coroutine
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,45 +62,39 @@ class RoomActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_room)
 
-
         selectedGenreTextView = findViewById(R.id.selected_genre)
         codeButton = findViewById(R.id.codeButton)
         startSwipingButton = findViewById(R.id.startSwiping)
 
         nickname = intent.getStringExtra("nickname") ?: "Unknown"
         roomCode = intent.getStringExtra("roomCode") ?: "Unknown Room"
+        isHost = intent.getBooleanExtra("isHost", false)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        // Initialize Supabase client
         supabase = createSupabaseClient(
             supabaseUrl = "https://conuknnnccumnwejxxkc.supabase.co/",
             supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvbnVrbm5uY2N1bW53ZWp4eGtjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxMTY4NzksImV4cCI6MjA1NzY5Mjg3OX0.5I17QPKjv2-fNaBCiYx6sOcVF0zCi1Syc0Tcg6z75uk"
         ) {
-
-            //...
-
-            install(Postgrest) {
-                // settings
-            }
-
+            install(Postgrest)
         }
 
-        val genres = listOf("Action & Adventure", "Animation", "Crime", "Drama", "Documentary","Fantasy", "Horror", "Mystery and Thriller", "Romance", "Sport", "War and Military")
+        val genres = listOf("Action & Adventure", "Animation", "Crime", "Drama", "Documentary", "Fantasy", "Horror", "Mystery and Thriller", "Romance", "Sport", "War and Military")
         val autoComplete: AutoCompleteTextView = findViewById(R.id.auto_complete)
         val autoCompleteLayout: View = autoComplete.parent as View
         val adapter = ArrayAdapter(this, R.layout.list_item, genres)
         autoComplete.setAdapter(adapter)
 
-        var selectedGenre= ""
+        var selectedGenre = ""
         autoComplete.onItemClickListener = AdapterView.OnItemClickListener { adapterView, _, i, _ ->
             selectedGenre = adapterView.getItemAtPosition(i).toString()
             Toast.makeText(this, "Genre: $selectedGenre", Toast.LENGTH_SHORT).show()
-            // Placeholder: store genre locally or for further use
         }
-
 
         membersTextView = findViewById(R.id.members)
 
@@ -113,9 +105,7 @@ class RoomActivity : AppCompatActivity() {
             copyToClipboard("Session Code", codeButton.text.toString())
         }
 
-        // Simulate host check
-        isHost = true // Assume the user is the host for now. Replace with logic if needed.
-
+        // Set visibility based on isHost
         if (isHost) {
             startSwipingButton.visibility = View.VISIBLE
             autoCompleteLayout.visibility = View.VISIBLE
@@ -135,7 +125,6 @@ class RoomActivity : AppCompatActivity() {
 
                     if (::movies.isInitialized && movies.isNotEmpty()) {
                         val intent = Intent(this@RoomActivity, SwipeActivity::class.java)
-                        // Ensure you are using putParcelableArrayListExtra to pass a list of Parcelable objects
                         intent.putParcelableArrayListExtra("movies", ArrayList(movies))
                         startActivity(intent)
                     } else {
@@ -145,25 +134,35 @@ class RoomActivity : AppCompatActivity() {
                     }
                 }
             }
-
         }
 
-
-        // Simulate member join (just display current nickname)
+        // Initialize members list and start polling
         membersList.add(nickname)
         CoroutineScope(Dispatchers.IO).launch {
             updateMembersView()
         }
+        startPollingMembers()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        // Cancel polling coroutine
+        pollingJob.cancel()
         if (isHost) {
             callDeleteRoom(roomCode)
             showToast("Room closed.")
         } else {
             callDeleteUser(nickname, roomCode)
             showToast("You left the room.")
+        }
+    }
+
+    private fun startPollingMembers() {
+        pollingJob = CoroutineScope(Dispatchers.IO).launch {
+            while (true) {
+                updateMembersView()
+                delay(5000) // Update every 5 seconds
+            }
         }
     }
 
@@ -189,31 +188,32 @@ class RoomActivity : AppCompatActivity() {
 
             val qrCodeImageView: ImageView = findViewById(R.id.qrCode)
             qrCodeImageView.setImageBitmap(bitmap)
-
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(this, "Failed to generate QR Code", Toast.LENGTH_SHORT).show()
         }
     }
 
-    @Serializable
-    data class UserNickname(val nickname: String)
-
     private suspend fun updateMembersView() {
-
-        val nicknames = supabase.from("users")
-            .select(columns = Columns.list("nickname")) {
-                filter {
-                    eq("roomid", roomCode)
+        try {
+            val nicknames = supabase.from("users")
+                .select(columns = Columns.list("nickname")) {
+                    filter {
+                        eq("roomid", roomCode)
+                    }
                 }
+                .decodeList<UserNickname>()
+
+            // Clear and update membersList to avoid duplicates
+            membersList.clear()
+            membersList.addAll(nicknames.map { it.nickname })
+
+            val membersText = membersList.joinToString("\n")
+            withContext(Dispatchers.Main) {
+                membersTextView.text = membersText
             }
-            .decodeList<UserNickname>()
-
-        membersList.addAll(nicknames.map { it.nickname })
-
-        val membersText = membersList.joinToString("\n")
-        runOnUiThread {
-            membersTextView.text = membersText
+        } catch (e: Exception) {
+            Log.e("Supabase", "Error updating members view: ${e.message}")
         }
     }
 
@@ -228,35 +228,29 @@ class RoomActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
-    // A suspend function to update the room genre
     private suspend fun addgenre(roomCode: String, genre: String) {
         try {
             Log.e("Supabase", "Trying to update room with code: $roomCode")
             val response = supabase.from("rooms").update(
-                mapOf("genre" to genre)  // Set the genre to the provided genre
+                mapOf("genre" to genre)
             ) {
                 select()
                 filter {
-                    eq("roomid", roomCode)  // Filter by roomid
+                    eq("roomid", roomCode)
                 }
-
             }
 
-            // Log the response
             Log.e("Supabase", "Update response: $response")
 
             val updatedData = response.data
 
             if (!updatedData.isNullOrEmpty()) {
-                // The update was successful
                 Log.e("Supabase", "Genre updated successfully.")
-                movies= callFetchMoviesByGenre(genre)
+                movies = callFetchMoviesByGenre(genre)
                 Log.e("Fetch", "Movies for genre $genre are $movies")
             } else {
-                // No rows were updated
                 Log.e("Supabase", "No matching room found or update failed.")
             }
-
         } catch (e: Exception) {
             Log.e("Supabase", "Error updating room genre: ${e.message}")
         }
@@ -277,13 +271,13 @@ class RoomActivity : AppCompatActivity() {
         }
     }
 
-    private fun callDeleteRoom(roomCode: String){
+    private fun callDeleteRoom(roomCode: String) {
         CoroutineScope(Dispatchers.IO).launch {
             deleteroom(roomCode)
         }
     }
 
-    internal fun callDeleteUser(nickname: String, roomCode: String){
+    internal fun callDeleteUser(nickname: String, roomCode: String) {
         CoroutineScope(Dispatchers.IO).launch {
             deleteuser(nickname, roomCode)
         }
@@ -291,14 +285,12 @@ class RoomActivity : AppCompatActivity() {
 
     private suspend fun deleteroom(roomCode: String) {
         try {
-            // Delete all users with the given roomCode from the users table
             supabase.from("users").delete {
                 filter {
                     eq("roomid", roomCode)
                 }
             }
 
-            // Delete the room itself from the rooms table
             supabase.from("rooms").delete {
                 filter {
                     eq("roomid", roomCode)
@@ -306,16 +298,13 @@ class RoomActivity : AppCompatActivity() {
             }
 
             Log.e("Supabase", "Room and all users deleted successfully.")
-
         } catch (e: Exception) {
             Log.e("Supabase", "Error deleting room and users: ${e.message}")
         }
     }
 
-    // Function to delete the user from the users table without altering the rooms table
     private suspend fun deleteuser(nickname: String, roomCode: String) {
         try {
-            // Delete the user from the users table with the given roomCode and nickname
             supabase.from("users").delete {
                 filter {
                     eq("roomid", roomCode)
@@ -324,10 +313,8 @@ class RoomActivity : AppCompatActivity() {
             }
 
             Log.e("Supabase", "$nickname has been removed from the room $roomCode.")
-
         } catch (e: Exception) {
             Log.e("Supabase", "Error deleting user: ${e.message}")
         }
     }
-
 }
