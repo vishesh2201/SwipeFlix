@@ -1,5 +1,6 @@
 package com.example.swipeflix
 
+import com.bumptech.glide.Glide
 import android.animation.Animator
 import android.animation.AnimatorInflater
 import android.animation.AnimatorSet
@@ -7,6 +8,7 @@ import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.Parcelable
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -15,15 +17,28 @@ import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
+import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
+import org.w3c.dom.Text
 import kotlin.math.abs
+import com.example.swipeflix.Movie
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Suppress("DEPRECATION")
 class SwipeActivity : AppCompatActivity() {
 
+    private var currentMovieIndex = 0
+    private lateinit var movies: List<Movie>
     private lateinit var movieCard: FrameLayout
     private lateinit var cardFront: LinearLayout
     private lateinit var cardBack: LinearLayout
@@ -38,6 +53,9 @@ class SwipeActivity : AppCompatActivity() {
     private val longPressTimeout = 600L
     private var longPressHandler: Handler? = null
     private var longPressRunnable: Runnable? = null
+    private lateinit var spacerView: View
+    private lateinit var likeText: TextView
+    private lateinit var dislikeText: TextView
 
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.O)
@@ -46,8 +64,38 @@ class SwipeActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_swipe)
 
+        // Retrieve the movie list from the intent
+        movies = intent.getParcelableArrayListExtra("movies") ?: emptyList()
+
+
+
+        if (movies.isNotEmpty()) {
+            // Proceed with your logic to display the movie list
+        } else {
+            Toast.makeText(this, "No movies found", Toast.LENGTH_SHORT).show()
+        }
+
+        spacerView = findViewById<View>(R.id.spacerView)
+        dislikeText = findViewById<TextView>(R.id.disliked)
+        likeText = findViewById<TextView>(R.id.liked)
+
+        if (likeText.visibility != View.GONE || dislikeText.visibility != View.GONE) {
+
+            spacerView.visibility=View.GONE
+        }
+        else{
+            spacerView.visibility=View.VISIBLE
+        }
 
         movieCard = findViewById(R.id.movie_card)
+
+        if (movies.isNotEmpty()) {
+            // Proceed with your logic to display the first movie
+            displayCurrentMovie()
+        } else {
+            Toast.makeText(this, "No movies found", Toast.LENGTH_SHORT).show()
+        }
+
         movieCard.post {
             cardStartX = movieCard.x
             cardStartY = movieCard.y
@@ -64,28 +112,11 @@ class SwipeActivity : AppCompatActivity() {
         cardBack.visibility = View.GONE
 
         thumbsUpButton.setOnClickListener {
-            val screenWidth = resources.displayMetrics.widthPixels
-            movieCard.animate()
-                .x(screenWidth.toFloat())
-                .alpha(0f)
-                .rotation(20f)
-                .setDuration(300)
-                .withEndAction {
-                    resetCard(movieCard)
-                }
-                .start()
+            swipeCardRight()
         }
         thumbsDownButton.setOnClickListener {
-            val screenWidth = resources.displayMetrics.widthPixels
-            movieCard.animate()
-                .x(-screenWidth.toFloat())
-                .alpha(0f)
-                .rotation(-20f)
-                .setDuration(300)
-                .withEndAction {
-                    resetCard(movieCard)
-                }
-                .start()
+            swipeCardLeft()
+
         }
 
         movieCard.setOnTouchListener { view, event ->
@@ -146,7 +177,10 @@ class SwipeActivity : AppCompatActivity() {
                                 .alpha(0f)
                                 .setDuration(300)
                                 .withEndAction {
-                                    resetCard(view)
+                                    updateVotesTable(currentMovieIndex)
+                                    currentMovieIndex = (currentMovieIndex + 1) % movies.size
+                                    displayCurrentMovie()
+                                    resetCard(movieCard)
                                 }
                                 .start()
                         } else if (movedX < -screenWidth / 4) {
@@ -156,7 +190,9 @@ class SwipeActivity : AppCompatActivity() {
                                 .alpha(0f)
                                 .setDuration(300)
                                 .withEndAction {
-                                    resetCard(view)
+                                    currentMovieIndex = (currentMovieIndex + 1) % movies.size
+                                    displayCurrentMovie()
+                                    resetCard(movieCard)
                                 }
                                 .start()
                         } else {
@@ -176,6 +212,85 @@ class SwipeActivity : AppCompatActivity() {
                 else -> false
             }
         }
+    }
+
+    private fun displayCurrentMovie() {
+        if (currentMovieIndex < movies.size) {
+            val movie = movies[currentMovieIndex]
+            // Update the UI with the current movie
+            updateMovieDetails(movie)
+        }
+    }
+
+    private fun updateMovieDetails(movie: Movie) {
+        // Assuming you have a method to update your UI
+        // For example:
+        val movieTitle = findViewById<TextView>(R.id.movieTitle)
+        val movieRuntime = findViewById<TextView>(R.id.runtime)
+        val moviePoster = findViewById<ImageView>(R.id.moviePoster)
+        val movieSynopsis= findViewById<TextView>(R.id.movieDescription)
+        val movieType= findViewById<TextView>(R.id.showtype)
+        val movieRuntimeBack= findViewById<TextView>(R.id.runtimeBack)
+        val movieRating= findViewById<TextView>(R.id.imdbRating)
+        val movieTitleBack= findViewById<TextView>(R.id.movieTitleBack)
+        val movieRatingBack= findViewById<TextView>(R.id.imdbRatingBack)
+
+        movieTitle.text = movie.title
+        movieRuntime.text = movie.runtime
+        movieSynopsis.text= movie.synopsis
+        movieType.text= movie.type
+        movieRating.text= movie.imdb_rating
+
+        movieTitleBack.text= movie.title
+        movieRuntimeBack.text= movie.runtime
+        movieRatingBack.text= movie.imdb_rating
+
+        Glide.with(this)
+            .load(movie.poster_url)
+            .into(moviePoster)
+    }
+
+    private fun swipeCardRight() {
+        val screenWidth = resources.displayMetrics.widthPixels
+        movieCard.animate()
+            .x(screenWidth.toFloat())
+            .alpha(0f)
+            .rotation(20f)
+            .setDuration(300)
+            .withEndAction {
+                updateVotesTable(currentMovieIndex)
+                currentMovieIndex = (currentMovieIndex + 1) % movies.size
+                displayCurrentMovie()
+                resetCard(movieCard)
+            }
+            .start()
+
+    }
+
+    private suspend fun updateVotes(index:Int){
+
+    }
+    private fun updateVotesTable(index: Int){
+        CoroutineScope(Dispatchers.IO).launch {
+            updateVotes(index)
+        }
+    }
+
+    private fun swipeCardLeft() {
+        val screenWidth = resources.displayMetrics.widthPixels
+        movieCard.animate()
+            .x(-screenWidth.toFloat())
+            .alpha(0f)
+            .rotation(-20f)
+            .setDuration(300)
+            .withEndAction {
+                // Move to next movie in the list
+                currentMovieIndex = (currentMovieIndex + 1) % movies.size
+                displayCurrentMovie()
+                resetCard(movieCard)
+            }
+            .start()
+
     }
 
     private fun flipCard() {

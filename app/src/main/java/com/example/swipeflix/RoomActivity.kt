@@ -1,5 +1,7 @@
 package com.example.swipeflix
 
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.json.JSONObject
 import android.annotation.SuppressLint
 import android.content.ClipData
@@ -7,8 +9,8 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.Movie
 import android.os.Bundle
+import android.os.Parcelable
 import android.util.Log
 import android.view.View
 import android.widget.*
@@ -16,6 +18,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.example.swipeflix.MainActivity.RoomPopulation
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 import io.github.jan.supabase.SupabaseClient
@@ -30,9 +33,19 @@ import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
+import java.util.UUID
+import com.example.swipeflix.Movie
+
 
 
 class RoomActivity : AppCompatActivity() {
+
+
+
+    @Serializable
+    data class GenreParam(val selected_genre: String)
 
     private lateinit var supabase: SupabaseClient
     private lateinit var membersTextView: TextView
@@ -43,13 +56,14 @@ class RoomActivity : AppCompatActivity() {
     lateinit var startSwipingButton: Button
     lateinit var nickname: String
     lateinit var roomCode: String
-    lateinit var movies: List<Map<String, Any?>>
+    lateinit var movies: List<Movie>
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_room)
+
 
         selectedGenreTextView = findViewById(R.id.selected_genre)
         codeButton = findViewById(R.id.codeButton)
@@ -76,7 +90,7 @@ class RoomActivity : AppCompatActivity() {
 
         }
 
-        val genres = listOf("Anime", "Action & adventure films", "Action Sci-Fi and Fantasy", "Comedies", "Dramas", "Documentaries", "Indian movies", "Horror movies", "Mysteries", "Reality TV", "TV Dramas")
+        val genres = listOf("Action & Adventure", "Animation", "Crime", "Drama", "Documentary","Fantasy", "Horror", "Mystery and Thriller", "Romance", "Sport", "War and Military")
         val autoComplete: AutoCompleteTextView = findViewById(R.id.auto_complete)
         val autoCompleteLayout: View = autoComplete.parent as View
         val adapter = ArrayAdapter(this, R.layout.list_item, genres)
@@ -113,25 +127,39 @@ class RoomActivity : AppCompatActivity() {
         }
 
         startSwipingButton.setOnClickListener {
-            callUpdateRoomGenre(roomCode, selectedGenre)
-//            CoroutineScope(Dispatchers.IO).launch {
-//                movies= fetchMoviesByGenre(selectedGenre)
-//                Log.e("Supabase", "Fetched movies: $movies")
-//            }
-            val intent = Intent(this, SwipeActivity::class.java)
-            startActivity(intent)
+            if (selectedGenre == "") {
+                Toast.makeText(this, "Please select a genre first", Toast.LENGTH_SHORT).show()
+            } else {
+                CoroutineScope(Dispatchers.IO).launch {
+                    addgenre(roomCode, selectedGenre)
+
+                    if (::movies.isInitialized && movies.isNotEmpty()) {
+                        val intent = Intent(this@RoomActivity, SwipeActivity::class.java)
+                        // Ensure you are using putParcelableArrayListExtra to pass a list of Parcelable objects
+                        intent.putParcelableArrayListExtra("movies", ArrayList(movies))
+                        startActivity(intent)
+                    } else {
+                        runOnUiThread {
+                            Toast.makeText(this@RoomActivity, "Failed to load movies. Try again.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+
         }
+
 
         // Simulate member join (just display current nickname)
         membersList.add(nickname)
-        updateMembersView()
+        CoroutineScope(Dispatchers.IO).launch {
+            updateMembersView()
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         if (isHost) {
             callDeleteRoom(roomCode)
-            // Placeholder for closing the room or clean-up logic
             showToast("Room closed.")
         } else {
             callDeleteUser(nickname, roomCode)
@@ -168,9 +196,25 @@ class RoomActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateMembersView() {
+    @Serializable
+    data class UserNickname(val nickname: String)
+
+    private suspend fun updateMembersView() {
+
+        val nicknames = supabase.from("users")
+            .select(columns = Columns.list("nickname")) {
+                filter {
+                    eq("roomid", roomCode)
+                }
+            }
+            .decodeList<UserNickname>()
+
+        membersList.addAll(nicknames.map { it.nickname })
+
         val membersText = membersList.joinToString("\n")
-        membersTextView.text = membersText
+        runOnUiThread {
+            membersTextView.text = membersText
+        }
     }
 
     private fun copyToClipboard(label: String, text: String) {
@@ -206,6 +250,8 @@ class RoomActivity : AppCompatActivity() {
             if (!updatedData.isNullOrEmpty()) {
                 // The update was successful
                 Log.e("Supabase", "Genre updated successfully.")
+                movies= callFetchMoviesByGenre(genre)
+                Log.e("Fetch", "Movies for genre $genre are $movies")
             } else {
                 // No rows were updated
                 Log.e("Supabase", "No matching room found or update failed.")
@@ -216,10 +262,18 @@ class RoomActivity : AppCompatActivity() {
         }
     }
 
-    // Calling the suspend function from a coroutine scope
-    private fun callUpdateRoomGenre(roomCode: String, genre: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            addgenre(roomCode, genre)
+    private suspend fun callFetchMoviesByGenre(genre: String): List<Movie> {
+        return try {
+            val rpcParams = buildJsonObject {
+                put("selected_genre", genre)
+            }
+
+            supabase.postgrest
+                .rpc("fetch_movies_by_genre", rpcParams)
+                .decodeList<Movie>()
+        } catch (e: Exception) {
+            Log.e("Supabase", "Error fetching movies: ${e.message}")
+            emptyList()
         }
     }
 
@@ -229,7 +283,7 @@ class RoomActivity : AppCompatActivity() {
         }
     }
 
-    private fun callDeleteUser(nickname: String, roomCode: String){
+    internal fun callDeleteUser(nickname: String, roomCode: String){
         CoroutineScope(Dispatchers.IO).launch {
             deleteuser(nickname, roomCode)
         }
@@ -240,7 +294,7 @@ class RoomActivity : AppCompatActivity() {
             // Delete all users with the given roomCode from the users table
             supabase.from("users").delete {
                 filter {
-                    eq("room_id", roomCode)
+                    eq("roomid", roomCode)
                 }
             }
 
@@ -264,7 +318,7 @@ class RoomActivity : AppCompatActivity() {
             // Delete the user from the users table with the given roomCode and nickname
             supabase.from("users").delete {
                 filter {
-                    eq("room_id", roomCode)
+                    eq("roomid", roomCode)
                     eq("nickname", nickname)
                 }
             }

@@ -29,6 +29,7 @@ import kotlin.random.Random
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -116,8 +117,9 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "Enter Room Code", Toast.LENGTH_SHORT).show()
                 } else {
                     CoroutineScope(Dispatchers.IO).launch {
+                        val userid= createUser(formattedNickname, enteredCode)
                         val roomId = enteredCode
-                        if (roomId != null) {
+                        if (roomId != null && userid!=null) {
                             addUserToRoom(formattedNickname, roomId, isLeader = false)
                             withContext(Dispatchers.Main) {
                                 val intent = Intent(this@MainActivity, RoomActivity::class.java)
@@ -156,10 +158,10 @@ class MainActivity : AppCompatActivity() {
                 "is_active" to "true"
             )
             val response = supabase.from("rooms").insert(record) { select() }
-            if (response.data != null) {
-                Log.e("Supabase", "Error creating room: ${response.data}")
+            if (response.data == null) {
+                Log.e("Supabase", "Error creating room for room code: ${roomCode}")
             } else {
-                Log.d("Supabase", "Room created successfully with code: $roomCode")
+                Log.d("Supabase", "Room created successfully with code: ${response.data}")
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -167,6 +169,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    data class RoomPopulation(val population: String)
 
     // Add a user to the users table and associate with a room
     private suspend fun addUserToRoom(nickname: String, roomId: String, isLeader: Boolean) {
@@ -174,6 +177,26 @@ class MainActivity : AppCompatActivity() {
             supabase.from("users").insert(
                 mapOf("nickname" to nickname, "room_id" to roomId, "is_leader" to isLeader)
             )
+            val room = supabase.from("rooms")
+                .select(columns = Columns.list("population"))
+                {
+                    filter {
+                        eq("roomid", roomId)  // Filter by roomid
+                    }
+                }
+                .decodeSingle<RoomPopulation>()
+
+            val currentPop = room.population.toIntOrNull() ?: 0
+            val newPop = currentPop + 1
+
+            // 3. Update population in the "rooms" table
+            supabase.from("rooms").update(
+                mapOf("population" to newPop.toString())
+            ){
+                filter{
+                    eq("id", roomId)
+                }
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }

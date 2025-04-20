@@ -92,8 +92,8 @@
 
                     <ImageView
                         android:id="@+id/moviePoster"
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
+                        android:layout_width="300dp"
+                        android:layout_height="420dp"
                         android:contentDescription="Movie Poster"
                         android:scaleType="centerCrop"
                         android:src="@drawable/img_2"
@@ -125,7 +125,20 @@
                     android:orientation="horizontal">
 
                     <TextView
-                        android:id="@+id/releasedateback"
+                        android:id="@+id/showtype"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="16dp"
+                        android:fontFamily="@font/nats"
+                        android:gravity="center"
+                        android:text="Movie"
+                        android:textColor="#7e7e7e"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        tools:ignore="HardcodedText" />
+
+                    <TextView
+                        android:id="@+id/imdbRating"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="16dp"
@@ -206,7 +219,7 @@
                     android:orientation="horizontal">
 
                     <TextView
-                        android:id="@+id/releasedateBack"
+                        android:id="@+id/imdbRatingBack"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="16dp"
@@ -256,10 +269,38 @@
                 app:srcCompat="@drawable/thumbsdown"
                 tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
 
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:id="@+id/liked"
+                android:text="Liked!"
+                android:textSize="32sp"
+                android:textAlignment="center"
+                android:fontFamily="@font/nats"
+                android:gravity="center"
+                tools:ignore="HardcodedText"
+                android:visibility="gone"/>
+
             <View
                 android:layout_width="0dp"
                 android:layout_height="60dp"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:id="@+id/spacerView"
+                android:visibility="visible" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:id="@+id/disliked"
+                android:text="Disliked!"
+                android:textSize="32sp"
+                android:textAlignment="center"
+                android:fontFamily="@font/nats"
+                android:gravity="center"
+                tools:ignore="HardcodedText"
+                android:visibility="gone"/>
 
             <ImageButton
                 android:id="@+id/thumbsup"
