@@ -55,6 +55,9 @@ class RoomActivity : AppCompatActivity() {
     lateinit var roomCode: String
     lateinit var movies: List<Movie>
     private lateinit var pollingJob: Job // To manage the polling coroutine
+    private lateinit var pollingJobSwipingButton: Job
+    private var startSwiping: Boolean = false
+    private var genre: String= "Horror"
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -114,6 +117,7 @@ class RoomActivity : AppCompatActivity() {
             startSwipingButton.visibility = View.GONE
             autoCompleteLayout.visibility = View.GONE
             selectedGenreTextView.visibility = View.VISIBLE
+            startPollingStartSwiping()
         }
 
         startSwipingButton.setOnClickListener {
@@ -126,6 +130,8 @@ class RoomActivity : AppCompatActivity() {
                     if (::movies.isInitialized && movies.isNotEmpty()) {
                         val intent = Intent(this@RoomActivity, SwipeActivity::class.java)
                         intent.putParcelableArrayListExtra("movies", ArrayList(movies))
+                        intent.putExtra("roomid", roomCode)
+                        callupdateSwiping()
                         startActivity(intent)
                     } else {
                         runOnUiThread {
@@ -148,6 +154,7 @@ class RoomActivity : AppCompatActivity() {
         super.onDestroy()
         // Cancel polling coroutine
         pollingJob.cancel()
+        pollingJobSwipingButton.cancel()
         if (isHost) {
             callDeleteRoom(roomCode)
             showToast("Room closed.")
@@ -163,6 +170,50 @@ class RoomActivity : AppCompatActivity() {
                 updateMembersView()
                 delay(5000) // Update every 5 seconds
             }
+        }
+    }
+
+    private fun startPollingStartSwiping(){
+        pollingJobSwipingButton= CoroutineScope(Dispatchers.IO).launch {
+            while(true) {
+                swipeCheck()
+                delay(5000)
+            }
+        }
+
+    }
+
+    private fun callupdateSwiping(){
+
+        CoroutineScope(Dispatchers.IO).launch {
+            updateStartSwiping()
+        }
+    }
+
+    private suspend fun updateStartSwiping(){
+        try {
+            Log.e("Supabase", "Trying to update room with code: $roomCode")
+            val response = supabase.from("rooms").update(
+                mapOf("start_swiping" to true)
+            ) {
+                select()
+                filter {
+                    eq("roomid", roomCode)
+                }
+            }
+
+            Log.e("Supabase", "Update response for start_swiping: $response")
+
+            val updatedData = response.data
+
+            if (!updatedData.isNullOrEmpty()) {
+                Log.e("Supabase", "start_swiping updated successfully.")
+                startSwiping= true;
+            } else {
+                Log.e("Supabase", "No matching room found or update for start_swiping failed.")
+            }
+        } catch (e: Exception) {
+            Log.e("Supabase", "Error updating start_swiping: ${e.message}")
         }
     }
 
@@ -214,6 +265,40 @@ class RoomActivity : AppCompatActivity() {
             }
         } catch (e: Exception) {
             Log.e("Supabase", "Error updating members view: ${e.message}")
+        }
+    }
+
+    private suspend fun swipeCheck(){
+        try{
+//            val startSwiping = supabase.from("rooms").select(columns = Columns.list("start_swiping")).decodeSingle<Boolean>()
+            val result = supabase.from("rooms")
+                .select(columns = Columns.list("start_swiping")) {
+                    filter {
+                        eq("roomid", roomCode)
+                    }
+                }
+                .decodeList<Map<String, Boolean>>()
+            val startSwiping = result.firstOrNull()?.get("start_swiping") ?: false
+            if (startSwiping){
+                delay(2000)
+                val result2 = supabase.from("rooms")
+                    .select(columns = Columns.list("genre")) {
+                        filter {
+                            eq("roomid", roomCode)
+                        }
+                    }
+                    .decodeList<Map<String, String>>()
+                genre= result2.firstOrNull()?.get("genre") ?: "Drama"
+                movies= callFetchMoviesByGenre(genre)
+                val intent = Intent(this@RoomActivity, SwipeActivity::class.java)
+                intent.putParcelableArrayListExtra("movies", ArrayList(movies))
+                intent.putExtra("roomid", roomCode)
+                pollingJobSwipingButton.cancel()
+                startActivity(intent)
+            }
+        }
+        catch (e: Exception){
+            Log.e("Supabase", "Error fetching start_swiping: ${e.message}")
         }
     }
 

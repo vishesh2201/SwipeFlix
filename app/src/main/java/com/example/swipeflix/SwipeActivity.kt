@@ -12,6 +12,7 @@ import android.os.Parcelable
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -25,6 +26,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import org.w3c.dom.Text
@@ -33,15 +35,23 @@ import com.example.swipeflix.Movie
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
 
 @Suppress("DEPRECATION")
 class SwipeActivity : AppCompatActivity() {
 
     private var currentMovieIndex = 0
+    private lateinit var movie: Movie
     private lateinit var movies: List<Movie>
     private lateinit var movieCard: FrameLayout
     private lateinit var cardFront: LinearLayout
     private lateinit var cardBack: LinearLayout
+    private lateinit var supabase: SupabaseClient
 
     private var isFrontVisible = true
     private var dX = 0f
@@ -56,6 +66,7 @@ class SwipeActivity : AppCompatActivity() {
     private lateinit var spacerView: View
     private lateinit var likeText: TextView
     private lateinit var dislikeText: TextView
+    private lateinit var roomid: String
 
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.O)
@@ -66,8 +77,14 @@ class SwipeActivity : AppCompatActivity() {
 
         // Retrieve the movie list from the intent
         movies = intent.getParcelableArrayListExtra("movies") ?: emptyList()
+        roomid= intent.getStringExtra("roomid") ?: "000000"
 
-
+        supabase = createSupabaseClient(
+            supabaseUrl = "https://conuknnnccumnwejxxkc.supabase.co/",
+            supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvbnVrbm5uY2N1bW53ZWp4eGtjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxMTY4NzksImV4cCI6MjA1NzY5Mjg3OX0.5I17QPKjv2-fNaBCiYx6sOcVF0zCi1Syc0Tcg6z75uk"
+        ) {
+            install(Postgrest)
+        }
 
         if (movies.isNotEmpty()) {
             // Proceed with your logic to display the movie list
@@ -183,6 +200,9 @@ class SwipeActivity : AppCompatActivity() {
                                     resetCard(movieCard)
                                 }
                                 .start()
+                            CoroutineScope(Dispatchers.IO).launch{
+//                                rightSwipeMovie(currentMovieIndex)
+                            }
                         } else if (movedX < -screenWidth / 4) {
                             // Swiped left
                             view.animate()
@@ -216,7 +236,7 @@ class SwipeActivity : AppCompatActivity() {
 
     private fun displayCurrentMovie() {
         if (currentMovieIndex < movies.size) {
-            val movie = movies[currentMovieIndex]
+            movie = movies[currentMovieIndex]
             // Update the UI with the current movie
             updateMovieDetails(movie)
         }
@@ -264,8 +284,116 @@ class SwipeActivity : AppCompatActivity() {
                 resetCard(movieCard)
             }
             .start()
-
+        CoroutineScope(Dispatchers.IO).launch{
+//            rightSwipeMovie(currentMovieIndex)
+        }
     }
+
+//    private suspend fun rightSwipeMovie(index: Int) {
+//        val movieTemp = movies[index]
+//        val TAG = "SwipeActivity"
+//        val movieIdAsString = movieTemp.id.toString()
+//
+//
+//        try {
+//            val existingVotes = supabase.from("votes")
+//                .select(columns = Columns.ALL) {
+//                    filter {
+//                        eq("roomid", roomid)
+//                        eq("movieid", movieIdAsString)
+//                    }
+//                    limit(1)
+//                }
+//                .decodeList<Map<String, String>>()
+//
+//            if (existingVotes.isNotEmpty()) {
+//                val currentCount = existingVotes[0]["count"]?.toIntOrNull() ?: 0
+//                val newCount = (currentCount + 1)
+//
+//                val updateResponse = supabase.from("votes")
+//                    .update(mapOf("count" to newCount.toString())) {
+//                        filter {
+//                            eq("roomid", roomid)
+//                            eq("movieid", movieIdAsString)
+//                        }
+//                    }
+//
+//                Log.d(TAG, "Updated vote count to $newCount for movieId=${movieTemp.id}")
+//            } else {
+//                val insertResponse = supabase.from("votes")
+//                    .insert(
+//                        mapOf(
+//                            "roomid" to roomid,
+//                            "movieid" to movieIdAsString,
+//                            "count" to "1"
+//                        )
+//                    )
+//                Log.d(TAG, "Inserted new vote entry for movieId=${movieTemp.id}")
+//            }
+//
+//        } catch (e: Exception) {
+//            Log.e(TAG, "Error while updating votes", e)
+//        }
+//    }
+
+//    @Serializable
+//    data class VoteCount(val count: String)
+//
+//    private suspend fun rightSwipeMovie(index: Int) {
+//        val movieTemp = movies[index]
+//        val TAG = "SwipeActivity"
+//        val movieIdAsString = movieTemp.id.toString()
+//
+//        try {
+//            // Fetch the existing vote entry (singular response or empty)
+//            val existingVotes = supabase.from("votes")
+//                .select(columns = Columns.list("count")) {
+//                    filter {
+//                        eq("roomid", roomid)
+//                        eq("movieid", movieIdAsString)
+//                    }
+//                }
+//                .decodeSingleOrNull<VoteCount>() // Decoding into a list of maps
+//
+//            // Check if the list is not empty
+//            if (existingVotes!= null) {
+//                // Safe to access the first item
+//                val currentCount = existingVotes.count.toInt()
+//                val newCount = currentCount + 1
+//                val strnewcount= newCount.toString()
+//
+//                // Update the vote count
+//                val updateResponse = supabase.from("votes")
+//                    .update(mapOf("count" to strnewcount)) {
+//                        filter {
+//                            eq("roomid", roomid)
+//                            eq("movieid", movieIdAsString)
+//                        }
+//                    }
+//
+//                Log.d(TAG, "Updated vote count to $newCount for movieId=${movieTemp.id}")
+//            } else {
+//                // If no existing vote entry, insert a new vote entry
+//                val insertResponse = supabase.from("votes")
+//                    .insert(
+//                        mapOf(
+//                            "roomid" to roomid,
+//                            "movieid" to movieIdAsString,
+//                            "count" to "1"
+//                        )
+//                    )
+//                Log.d(TAG, "Inserted new vote entry for movieId=${movieTemp.id}")
+//            }
+//
+//        } catch (e: Exception) {
+//            Log.e(TAG, "Error while updating votes", e)
+//        }
+//    }
+
+
+
+
+
 
     private suspend fun updateVotes(index:Int){
 
